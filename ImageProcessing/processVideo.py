@@ -10,8 +10,8 @@ import time
 
 
 CELL_DIM=50
-MODEL="F:\\ML Projects\\CUBIC Praksa\\ARSudokuSolver\\SudokuSolver\\OCR\\ocr_model_v4_gen"
-VIDEO="F:\\ML Projects\\CUBIC Praksa\\ARSudokuSolver\\Data\\sudoku_dataset-master\\sudoku6_Trim.mp4"
+MODEL="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen"
+VIDEO="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Video\\video2.mp4"
 
 
 def process_board(image,):
@@ -29,9 +29,6 @@ if __name__ == "__main__":
     solution=None
     sol_values=None
 
-    fps = vid.get(cv2.CAP_PROP_FPS)
-    delay = 1000 / fps
-
     while(vid.isOpened()):
         start_time=time.time()
         ret, frame = vid.read()
@@ -40,12 +37,12 @@ if __name__ == "__main__":
             image_pre = processImage.preprocess_image(frame)
             conture, area = processImage.find_board_corners(image_pre)
             img_contures = cv2.drawContours(image_pre, [conture], -1, (100, 100, 255), 2)
-            cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\ARSudokuSolver\\Data\\warped\\org_frame.jpg",image_pre)
+            #cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\warped\\org_frame.jpg",image_pre)
             if(area>0.1*frame_size):
                 perspective_matrix, width, height = processImage.get_perspective_transformation_matrix(conture)
                 img_warped = cv2.warpPerspective(image_pre, perspective_matrix, (width, height))
-                cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\ARSudokuSolver\\Data\\warped\\img_warped2.jpg",img_warped)
-                cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\ARSudokuSolver\\Data\\warped\\frame2.jpg",frame)
+                #cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\warped\\img_warped2.jpg",img_warped)
+                #cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\warped\\frame2.jpg",frame)
                 cells=processImage.get_cells_from_image(img_warped,width,height)
                 filtered_cells,values=processImage.filter_cells_for_classification(cells)
                 if(not board_is_solved):

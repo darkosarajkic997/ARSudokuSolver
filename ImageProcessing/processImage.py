@@ -155,7 +155,7 @@ def draw_solution_mask(shape,width,height,matrix,filled_cells):
     font = cv2.FONT_HERSHEY_SCRIPT_COMPLEX
     dim_x=int(width/9)
     dim_y=int(height/9)
-    if(dim_x>50):
+    if(dim_x>70):
         fontScale=2
     index=0
     for row in range(0,9):
@@ -195,10 +195,10 @@ def check_border(image):
         return True
     else:
         return False
-    
+
 
 if __name__ == "__main__":
-    model = keras.models.load_model("F:\\ML Projects\\CUBIC Praksa\\ARSudokuSolver\\SudokuSolver\\OCR\\ocr_model_v4_gen")
+    model = keras.models.load_model("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen")
     image = cv2.imread("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Images\\sudoku.jpg")
     #image_area=image.shape[0]*image.shape[1]
     start_time=time.time()
