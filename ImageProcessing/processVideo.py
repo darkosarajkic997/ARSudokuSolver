@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(1, "F:\\ML Projects\\CUBIC Praksa\\SudokuSolver")
+sys.path.append(".")
 
 import cv2
 import numpy as np
@@ -9,14 +9,8 @@ import processImage
 import time
 
 
-CELL_DIM=50
 MODEL="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen"
 VIDEO="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Video\\video2.mp4"
-
-
-def process_board(image,):
-    pass
-
 
 if __name__ == "__main__":
     model = keras.models.load_model(MODEL)
@@ -29,6 +23,9 @@ if __name__ == "__main__":
     solution=None
     sol_values=None
 
+    fps = vid.get(cv2.CAP_PROP_FPS)
+    frame_time=1000/fps
+
     while(vid.isOpened()):
         start_time=time.time()
         ret, frame = vid.read()
@@ -36,11 +33,11 @@ if __name__ == "__main__":
             frame_size=frame.shape[0]*frame.shape[1]
             image_pre = processImage.preprocess_image(frame)
             conture, area = processImage.find_board_corners(image_pre)
-            img_contures = cv2.drawContours(image_pre, [conture], -1, (100, 100, 255), 2)
+            #img_contures = cv2.drawContours(image_pre, [conture], -1, (100, 100, 255), 2)
             #cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\warped\\org_frame.jpg",image_pre)
-            if(area>0.1*frame_size):
-                perspective_matrix, width, height = processImage.get_perspective_transformation_matrix(conture)
-                img_warped = cv2.warpPerspective(image_pre, perspective_matrix, (width, height))
+            perspective_matrix, width, height = processImage.get_perspective_transformation_matrix(conture)
+            img_warped = cv2.warpPerspective(image_pre, perspective_matrix, (width, height))
+            if(area>0.05*frame_size and processImage.check_border(img_warped)):
                 #cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\warped\\img_warped2.jpg",img_warped)
                 #cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\warped\\frame2.jpg",frame)
                 cells=processImage.get_cells_from_image(img_warped,width,height)
@@ -74,12 +71,11 @@ if __name__ == "__main__":
 
             cv2.putText(frame,str(int(1/time_difference)),(0,50),fontScale=2,color=(0,255,0),thickness=2,fontFace=cv2.FONT_HERSHEY_PLAIN)
             cv2.imshow('frame', frame)
-
         else:
             break
 
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        remaining_frame_time=int(frame_time-time_difference*1000)
+        if cv2.waitKey(max(remaining_frame_time,1)) & 0xFF == ord('q'):
             break
 
     vid.release()

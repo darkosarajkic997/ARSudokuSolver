@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(1, "F:\\ML Projects\\CUBIC Praksa\\SudokuSolver")
+sys.path.append(".")
 
 import cv2
 import numpy as np
@@ -38,22 +38,23 @@ def find_board_corners(image):
     return max_conture, max_area
 
 def orient_points_in_conture_clockwise2(conture):
-    top2_index=np.argpartition(conture[:,0], 2)
-    bottom2_index=np.argpartition(conture[:,0], -2)
+    ordered_index=np.argpartition(conture[:,1], 2)
+    top2_index=ordered_index[:2]
+    bottom2_index=ordered_index[2:]
 
-    if(conture[:,top2_index[0]][0]>conture[:,top2_index[1]][0]):
-        top_left=conture[:,top2_index[1]]
-        top_right=conture[:,top2_index[0]]
+    if(conture[top2_index[0]][0]>conture[top2_index[1]][0]):
+        top_left=conture[top2_index[1]]
+        top_right=conture[top2_index[0]]
     else:
-        top_left=conture[:,top2_index[0]]
-        top_right=conture[:,top2_index[1]]
+        top_left=conture[top2_index[0]]
+        top_right=conture[top2_index[1]]
 
-    if(conture[:,bottom2_index[0]][0]>conture[:,bottom2_index[1]][0]):
-        bottom_left=conture[:,bottom2_index[1]]
-        bottom_right=conture[:,bottom2_index[0]]
+    if(conture[bottom2_index[0]][0]>conture[bottom2_index[1]][0]):
+        bottom_left=conture[bottom2_index[1]]
+        bottom_right=conture[bottom2_index[0]]
     else:
-        bottom_left=conture[:,bottom2_index[0]]
-        bottom_right=conture[:,bottom2_index[1]]
+        bottom_left=conture[bottom2_index[0]]
+        bottom_right=conture[bottom2_index[1]]
     
     
     return np.array([top_left,top_right,bottom_right,bottom_left])
@@ -88,7 +89,7 @@ def find_distance(x, y):
 
 def get_perspective_transformation_matrix(conture):
     source_points = np.reshape(conture, (4, 2)).astype(np.float32)
-    source_points=orient_points_in_conture_clockwise(source_points)
+    source_points=orient_points_in_conture_clockwise2(source_points)
 
     width = max(int(find_distance(source_points[0], source_points[1])), int(
         find_distance(source_points[3], source_points[2])))
@@ -147,7 +148,7 @@ def filter_cells_for_classification(cells):
     return filtered_cells,values
 
 
-def draw_solution_mask(shape,width,height,matrix,filled_cells):
+def draw_solution_mask(shape,width,height,matrix,filled_cells,size_up_dim=60):
     image=np.full(shape,255,dtype='uint8')
     fontScale = 1
     color = (0, 0, 0)
@@ -155,7 +156,7 @@ def draw_solution_mask(shape,width,height,matrix,filled_cells):
     font = cv2.FONT_HERSHEY_SCRIPT_COMPLEX
     dim_x=int(width/9)
     dim_y=int(height/9)
-    if(dim_x>70):
+    if(dim_x>size_up_dim and dim_y>size_up_dim):
         fontScale=2
     index=0
     for row in range(0,9):
@@ -177,44 +178,50 @@ def draw_solution_mask(shape,width,height,matrix,filled_cells):
     return image
 
 
-def check_border(image):
+def check_border(image, threshold=0.2, border_width=5):
     width=image.shape[1]
     height=image.shape[0]
     
-    top_border=image[0:5,:]
-    bottom_border=image[-5:-1,:]
-    left_border=image[:,0:5]
-    right_border=image[:,-5:-1]
+    top_border=image[0:border_width,:]
+    bottom_border=image[-border_width:,:]
+    left_border=image[:,0:border_width]
+    right_border=image[:,-border_width:]
 
-    top_border_pct_filed=np.count_nonzero(top_border)/(width*5)
-    bottom_border_pct_filed=np.count_nonzero(bottom_border)/(width*5)
-    left_border_pct_filed=np.count_nonzero(left_border)/(height*5)
-    right_border_pct_filed=np.count_nonzero(right_border)/(height*5)
-
-    if(top_border_pct_filed>0. and bottom_border_pct_filed>0.2 and left_border_pct_filed>0.2 and right_border_pct_filed>0.2):
+    top_border_pct_filed=np.count_nonzero(top_border)/(width*border_width)
+    bottom_border_pct_filed=np.count_nonzero(bottom_border)/(width*border_width)
+    left_border_pct_filed=np.count_nonzero(left_border)/(height*border_width)
+    right_border_pct_filed=np.count_nonzero(right_border)/(height*border_width)
+    #print(top_border_pct_filed,bottom_border_pct_filed,left_border_pct_filed,right_border_pct_filed)
+    if(top_border_pct_filed>threshold and bottom_border_pct_filed>threshold and left_border_pct_filed>threshold and right_border_pct_filed>threshold):
         return True
     else:
         return False
 
 
+MODEL="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen"
+IMAGE="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Images\\sudoku_from_video.jpg"
+
 if __name__ == "__main__":
-    model = keras.models.load_model("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen")
-    image = cv2.imread("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Images\\sudoku.jpg")
-    #image_area=image.shape[0]*image.shape[1]
+    model = keras.models.load_model(MODEL)
+    image = cv2.imread(IMAGE)
+
+    image_area=image.shape[0]*image.shape[1]
     start_time=time.time()
+
     image_pre = preprocess_image(image)
-    #image_area=image_pre.shape[0]*image_pre.shape[1]
+    image_area=image_pre.shape[0]*image_pre.shape[1]
+
     conture,conture_area = find_board_corners(image_pre)
-    #img_contures = cv2.drawContours(image, [conture], -1, (100, 100, 255), 2)
-    #cv2.imshow("contures", img_contures)
+    img_contures = cv2.drawContours(image, [conture], -1, (100, 100, 255), 2)
     perspective_matrix, width, height = get_perspective_transformation_matrix(conture)
-            
     #invers_matrix=np.linalg.inv(perspective_matrix)
     img_warped = cv2.warpPerspective(image_pre, perspective_matrix, (width, height))
     #img_warped_color=cv2.warpPerspective(image, perspective_matrix, (width, height))
     cv2.imshow("warped", img_warped)
+    cv2.imshow('conture',img_contures)
     print(time.time()-start_time)  
-    if(check_border(img_warped)):
+    print(image_area,conture_area)
+    if(check_border(img_warped) and image_area*0.1<conture_area):
     
         cells=get_cells_from_image(img_warped,width,height)
 
