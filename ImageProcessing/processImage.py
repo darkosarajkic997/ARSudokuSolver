@@ -27,6 +27,7 @@ def find_board_corners(image):
         image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     max_area = 0
     max_conture = None
+    
     for conture in contours:
         peri = cv2.arcLength(conture, True)
         conture_approx = cv2.approxPolyDP(conture, 0.05 * peri, True)
@@ -37,7 +38,7 @@ def find_board_corners(image):
 
     return max_conture, max_area
 
-def orient_points_in_conture_clockwise2(conture):
+def orient_points_in_conture_clockwise(conture):
     ordered_index=np.argpartition(conture[:,1], 2)
     top2_index=ordered_index[:2]
     bottom2_index=ordered_index[2:]
@@ -59,29 +60,6 @@ def orient_points_in_conture_clockwise2(conture):
     
     return np.array([top_left,top_right,bottom_right,bottom_left])
 
-def orient_points_in_conture_clockwise(conture):
-    mean_x=np.mean(conture[:,0])
-    mean_y=np.mean(conture[:,1])
-
-    top=conture[conture[:,1]<mean_y]
-    bottom=conture[conture[:,1]>=mean_y]
-
-    if(top[0][0]>=mean_x):
-        top_right=top[0]
-        top_left=top[1]
-    else:
-        top_right=top[1]
-        top_left=top[0]
-
-    if(bottom[0][0]>=mean_x):
-        bottom_right=bottom[0]
-        bottom_left=bottom[1]
-    else:
-        bottom_right=bottom[1]
-        bottom_left=bottom[0]
-
-    return np.array([top_left,top_right,bottom_right,bottom_left])
-
 
 def find_distance(x, y):
     return np.sqrt((x[0]-y[0])**2+(x[1]-y[1])**2)
@@ -89,7 +67,7 @@ def find_distance(x, y):
 
 def get_perspective_transformation_matrix(conture):
     source_points = np.reshape(conture, (4, 2)).astype(np.float32)
-    source_points=orient_points_in_conture_clockwise2(source_points)
+    source_points=orient_points_in_conture_clockwise(source_points)
 
     width = max(int(find_distance(source_points[0], source_points[1])), int(
         find_distance(source_points[3], source_points[2])))
@@ -221,7 +199,7 @@ if __name__ == "__main__":
     cv2.imshow('conture',img_contures)
     print(time.time()-start_time)  
     print(image_area,conture_area)
-    if(check_border(img_warped) and image_area*0.1<conture_area):
+    if(check_border(img_warped) and image_area*0.2<conture_area):
     
         cells=get_cells_from_image(img_warped,width,height)
 
