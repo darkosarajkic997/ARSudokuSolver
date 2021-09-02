@@ -33,6 +33,7 @@ if __name__ == "__main__":
         
         #gb=SudokuBoard()
 
-        gb=SudokuBoard(sudoku16x16,dim_x=16,dim_y=16,input_type='arr',cell_dim_x=4,cell_dim_y=4)
+        gb=SudokuBoard(sudoku8x8,dim_x=8,dim_y=8,input_type='arr',cell_dim_x=4,cell_dim_y=2)
+        print(gb.validate_board())
         gb.solve()
         print(gb.board)
