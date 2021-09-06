@@ -126,7 +126,7 @@ def filter_cells_for_classification(cells):
     return filtered_cells,values
 
 
-def draw_solution_mask(shape,width,height,matrix,filled_cells,size_up_dim=60):
+def draw_solution_mask(shape,width,height,matrix,filled_cells,size_up_dim=50):
     image=np.full(shape,255,dtype='uint8')
     fontScale = 1
     color = (0, 0, 0)
@@ -150,7 +150,8 @@ def draw_solution_mask(shape,width,height,matrix,filled_cells,size_up_dim=60):
                     fontScale=fontScale,
                     thickness=thickness,
                     color=color,
-                    fontFace=font)
+                    fontFace=font,
+                    lineType=cv2.LINE_AA)
             index+=1
 
     return image
@@ -195,10 +196,10 @@ if __name__ == "__main__":
     #invers_matrix=np.linalg.inv(perspective_matrix)
     img_warped = cv2.warpPerspective(image_pre, perspective_matrix, (width, height))
     #img_warped_color=cv2.warpPerspective(image, perspective_matrix, (width, height))
-    cv2.imshow("warped", img_warped)
-    cv2.imshow('conture',img_contures)
-    print(time.time()-start_time)  
-    print(image_area,conture_area)
+    #cv2.imshow("warped", img_warped)
+    #cv2.imshow('conture',img_contures)
+    #print(time.time()-start_time)  
+    #print(image_area,conture_area)
     if(check_border(img_warped) and image_area*0.2<conture_area):
     
         cells=get_cells_from_image(img_warped,width,height)

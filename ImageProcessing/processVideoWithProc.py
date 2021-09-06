@@ -10,8 +10,8 @@ from Solver.sudokuBoard import SudokuBoard
 
 
 MODEL = "F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen"
-VIDEO = "F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Video\\video2.mp4"
-NUMBER_OF_PROCESSES = 3
+VIDEO = "F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Video\\video1.mp4"
+NUMBER_OF_PROCESSES = 1
 
 
 def find_new_solution(image, model):
@@ -74,14 +74,12 @@ def solving_worker(data_queue, result_queue, board_dict):
                 else:
                     result_queue.put((key))
 
-
 if __name__ == "__main__":
     vid = cv2.VideoCapture(0)
 
     if (vid.isOpened() == False):
         print("Error opening video")
     else:
-        #model = keras.models.load_model(MODEL)
 
         fps = vid.get(cv2.CAP_PROP_FPS)
         frame_time = 1000/fps
@@ -99,6 +97,10 @@ if __name__ == "__main__":
         pool = multiprocessing.Pool(
             processes=NUMBER_OF_PROCESSES, initializer=solving_worker, initargs=(data_queue, result_queue,board_dict,))
 
+        ALPHA=0.4
+        SMOOTH_QUEUE_SIZE=5
+        transformation_matrix_queue=np.zeros((SMOOTH_QUEUE_SIZE,3,3))
+        matrix_index=0
         while(vid.isOpened()):
             ret, frame = vid.read()
             start_time = time.time()
@@ -106,52 +108,53 @@ if __name__ == "__main__":
                 frame_size = frame.shape[0]*frame.shape[1]
                 image_pre = processImage.preprocess_image(frame)
                 conture, area = processImage.find_board_corners(image_pre)
-                if(area > 0):
+                if(area > 0.1*frame_size):
                     perspective_matrix, width, height = processImage.get_perspective_transformation_matrix(conture)
                     img_warped = cv2.warpPerspective(image_pre, perspective_matrix, (width, height))
-                    # print(perspective_matrix)
-                if(area > 0.15*frame_size and processImage.check_border(img_warped)):
-                    data_queue.put(img_warped)
-                    while(not result_queue.empty()):
-                        key = result_queue.get()
-                        if(not board_is_solved):
-                            board_is_solved = True
-                            solution = board_dict.get(key)
-                            solution_key=key
-                        else:
-                            if(solution_key!=key):
-                                if(new_solution_key is None):
-                                    new_solution_key=key
-                                    change_index=1
-                                elif(new_solution_key==key):
-                                    change_index+=1
-                                else:
-                                    new_solution_key=key
+                    if(processImage.check_border(img_warped)):
+                        data_queue.put(img_warped)
+                        while(not result_queue.empty()):
+                            key = result_queue.get()
+                            if(not board_is_solved):
+                                board_is_solved = True
+                                solution = board_dict.get(key)
+                                solution_key=key
                             else:
-                                change_index=0
-
-
-                    if(change_index > 5):
-                        solution = board_dict.get(new_solution_key)
-                        solution_key=new_solution_key
-                        new_solution_key=None
-
-                    if(board_is_solved):
-                        solved = processImage.draw_solution_mask(img_warped.shape, width, height, solution[0], solution[1])
-                        solved = cv2.warpPerspective(solved, perspective_matrix, (frame.shape[1], frame.shape[0]), borderValue=255, flags=cv2.WARP_INVERSE_MAP)
-                        frame[:, :, 1] = np.bitwise_and(frame[:, :, 1], solved)
-                        frame = cv2.drawContours(frame, [conture], -1, (255, 0, 255), 2)
-                        cv2.putText(frame, 'SOLVED', (0, 100), fontScale=2, color=(255, 0, 255), thickness=2, fontFace=cv2.FONT_HERSHEY_PLAIN)
-                    else:
-                        frame = cv2.drawContours(frame, [conture], -1, (0, 255, 255), 2)
-                        cv2.putText(frame, 'SOLVING', (0, 100), fontScale=2, color=(0, 255, 255), thickness=2, fontFace=cv2.FONT_HERSHEY_PLAIN)
+                                if(solution_key!=key):
+                                    if(new_solution_key is None):
+                                        new_solution_key=key
+                                        change_index=1
+                                    elif(new_solution_key==key):
+                                        change_index+=1
+                                    else:
+                                        new_solution_key=key
+                                else:
+                                    change_index=0
+                        
+                        transformation_matrix_queue[matrix_index % SMOOTH_QUEUE_SIZE,:,:]=np.copy(perspective_matrix)
+                        matrix_index+=1
+                        if(matrix_index > SMOOTH_QUEUE_SIZE):
+                            smooth_matrix=(np.mean(transformation_matrix_queue,axis=0))*ALPHA+perspective_matrix*(1-ALPHA)
+                        else:
+                            smooth_matrix=perspective_matrix
+                        
+                        if(change_index > 5):
+                            solution = board_dict.get(new_solution_key)
+                            solution_key=new_solution_key
+                            new_solution_key=None
+                        if(board_is_solved and solution is not None):
+                            solved = processImage.draw_solution_mask(img_warped.shape, width, height, solution[0], solution[1])
+                            solved = cv2.warpPerspective(solved, smooth_matrix, (frame.shape[1], frame.shape[0]), borderValue=255, flags=cv2.WARP_INVERSE_MAP)
+                            frame[:, :, 1] = np.bitwise_and(frame[:, :, 1], solved)
+                            #frame = cv2.drawContours(frame, [conture], -1, (255, 0, 255), 2)
+                            cv2.putText(frame, 'SOLVED', (0, 50), fontScale=2, color=(255, 0, 255), thickness=2, fontFace=cv2.FONT_HERSHEY_PLAIN)
+                        else:
+                            #frame = cv2.drawContours(frame, [conture], -1, (0, 255, 255), 2)
+                            cv2.putText(frame, 'SOLVING', (0, 50), fontScale=2, color=(0, 255, 255), thickness=2, fontFace=cv2.FONT_HERSHEY_PLAIN)
                 else:
-                    cv2.putText(frame, 'NO SUDOKU', (0, 100), fontScale=2, color=(255, 0, 0), thickness=2, fontFace=cv2.FONT_HERSHEY_PLAIN)
-
-                time_difference = time.time()-start_time
-                cv2.putText(frame, str(int(1/time_difference)), (0, 50), fontScale=2,color=(0, 0, 255), thickness=2, fontFace=cv2.FONT_HERSHEY_PLAIN)
+                    cv2.putText(frame, 'NO SUDOKU', (0, 50), fontScale=2, color=(255, 0, 0), thickness=2, fontFace=cv2.FONT_HERSHEY_PLAIN)
                 cv2.imshow('frame', frame)
-                remaining_frame_time = int(frame_time-time_difference/1000)
+                remaining_frame_time = int(frame_time-(time.time()-start_time)/1000)
                 if cv2.waitKey(max(remaining_frame_time, 1)) & 0xFF == ord('q'):
                     break
 
