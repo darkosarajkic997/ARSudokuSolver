@@ -183,6 +183,7 @@ IMAGE="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Images\\sudoku_from_vi
 if __name__ == "__main__":
     model = keras.models.load_model(MODEL)
     image = cv2.imread(IMAGE)
+ 
 
     image_area=image.shape[0]*image.shape[1]
     start_time=time.time()
@@ -206,8 +207,8 @@ if __name__ == "__main__":
 
         filtered_cells,values=filter_cells_for_classification(cells)
 
-        for index,cell in enumerate(filtered_cells):
-            cv2.imwrite(f"F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\TestCells\\{index}.jpg",np.reshape(cell,(50,50)))
+        # for index,cell in enumerate(filtered_cells):
+        #     cv2.imwrite(f"F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\TestCells\\{index}.jpg",np.reshape(cell,(50,50)))
 
         if(len(filtered_cells)>0):
             batch=np.concatenate(filtered_cells)
