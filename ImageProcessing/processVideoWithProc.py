@@ -4,13 +4,11 @@ import numpy as np
 import cv2
 import multiprocessing
 import sys
+import configparser
 sys.path.append(".")
 
 from Solver.sudokuBoard import SudokuBoard
 
-
-MODEL = "F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen"
-VIDEO = "F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Video\\video1.mp4"
 NUMBER_OF_PROCESSES = 1
 
 
@@ -56,9 +54,9 @@ def generate_matrix_from_image(image, model):
     return (False,)
 
 
-def solving_worker(data_queue, result_queue, board_dict):
+def solving_worker(data_queue, result_queue, board_dict, model):
     from tensorflow import keras
-    model = keras.models.load_model(MODEL)
+    model = keras.models.load_model(model)
     while(True):
         if(not data_queue.empty()):
             image = data_queue.get()
@@ -76,6 +74,8 @@ def solving_worker(data_queue, result_queue, board_dict):
 
 if __name__ == "__main__":
     vid = cv2.VideoCapture(0)
+    config = configparser.ConfigParser()
+    config.read('config.ini')
 
     if (vid.isOpened() == False):
         print("Error opening video")
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         result_queue = manager.Queue()
         board_dict = manager.dict()
         pool = multiprocessing.Pool(
-            processes=NUMBER_OF_PROCESSES, initializer=solving_worker, initargs=(data_queue, result_queue,board_dict,))
+            processes=NUMBER_OF_PROCESSES, initializer=solving_worker, initargs=(data_queue, result_queue,board_dict,config['Resources']['model']))
 
         ALPHA=0.4
         SMOOTH_QUEUE_SIZE=5

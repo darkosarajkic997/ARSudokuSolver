@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import configparser
 
 def check_border(image):
     width=image.shape[1]
@@ -21,9 +22,10 @@ def check_border(image):
         return False
 
 
-IMAGE="F:\\ML Projects\\CUBIC Praksa\\ARSudokuSolver\\Data\warped\\img_warped2.jpg"
 if __name__ == "__main__":
-    image = cv2.imread(IMAGE)
+    config=configparser.ConfigParser()
+    config.read('config.ini')
+    image = cv2.imread(config['Resources']['image'])
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1,40))

@@ -1,6 +1,5 @@
 import sys
 sys.path.append(".")
-import ImageProcessing
 import queue
 from threading import Thread
 import time

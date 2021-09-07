@@ -7,14 +7,14 @@ from tensorflow import keras
 from Solver.sudokuBoard import SudokuBoard
 import processImage
 import time
-
-
-MODEL="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen"
-VIDEO="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Video\\video2.mp4"
+import configparser
 
 if __name__ == "__main__":
-    model = keras.models.load_model(MODEL)
-    vid = cv2.VideoCapture(VIDEO)
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    model = keras.models.load_model(config['Resources']['model'])
+    vid = cv2.VideoCapture(config['Resources']['video'])
 
     if (vid.isOpened()== False):
         print("Error opening video")
