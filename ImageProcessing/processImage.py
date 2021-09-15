@@ -127,7 +127,7 @@ def filter_cells_for_classification(cells):
     return filtered_cells,values
 
 
-def draw_solution_mask(shape,width,height,matrix,filled_cells,size_up_dim=50):
+def draw_solution_mask(shape,width,height,matrix,filled_cells,size_up_dim=60):
     image=np.full(shape,255,dtype='uint8')
     fontScale = 1
     color = (0, 0, 0)
@@ -197,6 +197,7 @@ if __name__ == "__main__":
     perspective_matrix, width, height = get_perspective_transformation_matrix(conture)
     #invers_matrix=np.linalg.inv(perspective_matrix)
     img_warped = cv2.warpPerspective(image_pre, perspective_matrix, (width, height))
+    cv2.imwrite("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Images\\warped.jpg",img_warped)
     #img_warped_color=cv2.warpPerspective(image, perspective_matrix, (width, height))
     #cv2.imshow("warped", img_warped)
     #cv2.imshow('conture',img_contures)

@@ -97,7 +97,7 @@ if __name__ == "__main__":
         pool = multiprocessing.Pool(
             processes=NUMBER_OF_PROCESSES, initializer=solving_worker, initargs=(data_queue, result_queue,board_dict,config['Resources']['model']))
 
-        ALPHA=0.4
+        ALPHA=0.2
         SMOOTH_QUEUE_SIZE=5
         transformation_matrix_queue=np.zeros((SMOOTH_QUEUE_SIZE,3,3))
         matrix_index=0
