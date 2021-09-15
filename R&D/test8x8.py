@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(1, "F:\\ML Projects\\CUBIC Praksa\\SudokuSolver")
+sys.path.append(".")
 
 from Solver.sudokuBoard import SudokuBoard
 import numpy as np

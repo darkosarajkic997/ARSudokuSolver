@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 IMAGE="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Images\\sudoku_from_video.jpg"
-testLib=ctypes.CDLL("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\DLLs\\testcdll\\x64\\Debug\\testcdll.dll")
+testLib=ctypes.CDLL("D:\\SudokuSolver2\\DLLs\\testcdll\\Debug\\testcdll.dll")
 
 def mask_image_C(image,image_data_type=ctypes.c_uint8):
     image_function=testLib.doPicture
