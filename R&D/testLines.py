@@ -8,12 +8,20 @@ import time
 import matplotlib.pyplot as plt
 from math import pi
 
+def find_sum_from_range(angle_range_low, angle_range_high, histo):
+    sum=0
+    for angle in range(angle_range_low,angle_range_high):
+        sum+=histo[angle]
+
+    return sum
+
+
 if __name__=='__main__':
     filter = True
     config=configparser.ConfigParser()
     config.read('config.ini')
 
-    img = cv2.imread(config['Resources']['image']) 
+    img = cv2.imread(config['Resources']['image_lines']) 
     start=time.time()
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     # dst = cv2.cornerHarris(gray,7,7,0.1)
@@ -81,8 +89,7 @@ if __name__=='__main__':
         filtered_lines = lines
 
     angle=180
-    bucket_width=1
-    theta_histo=np.zeros((angle//(2*bucket_width),))
+    theta_histo=np.zeros((angle//2))
     for line in filtered_lines:
         rho,theta = line[0]
         #print(rho,theta)
@@ -98,7 +105,7 @@ if __name__=='__main__':
         deg_theta=int(theta*(180/pi))%angle
         if(deg_theta>90):
             deg_theta=90-(deg_theta%90)
-        theta_histo[deg_theta//bucket_width]+=1
+        theta_histo[deg_theta]+=1
         print(deg_theta , theta, rho)
         if(deg_theta<75 or deg_theta>140):
             cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
@@ -112,6 +119,17 @@ if __name__=='__main__':
     # img[dst>0.01*dst.max()]=[255,0,0]
 
     cv2.imshow('houghjpg',img)
-    plt.bar(np.arange(len(theta_histo)),theta_histo)
+    
+
+    rolling_histo_max=np.zeros((90))
+    for index in range(5,86):
+        rolling_histo_max[index]=find_sum_from_range(index-5,index+5,theta_histo)
+
+    # plt.bar(np.arange(len(theta_histo)),theta_histo)
+    # plt.show()
+
+    plt.bar(np.arange(len(rolling_histo_max)),rolling_histo_max)
     plt.show()
+
+
     cv2.waitKey(0)
