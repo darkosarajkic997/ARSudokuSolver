@@ -564,3 +564,5 @@ FodyWeavers.xsd
 #---------- Custom ------------
 Data/
 *.ini
+TestBoardFinderDLL/
+Testlibrary/
