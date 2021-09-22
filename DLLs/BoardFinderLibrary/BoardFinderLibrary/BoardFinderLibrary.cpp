@@ -3,17 +3,11 @@
 
 #define _USE_MATH_DEFINES
 #include<cmath>
-
 #include<iostream>
 
 #define MAX_ANGLE 90
 
-/// <summary>
-/// Increment rolling max on range max(0,value-range) to min(value+range,90)  
-/// </summary>
-/// <param name="value"> 'angle value'</param>
-/// <param name="rollingMax"> 'array that holds rolling max'</param>
-/// <param name="range"> 'range width'</param>
+
 void addValueToRollingMax(int value, int* rollingMax, int range)
 {
 	int minRange, maxRange;
@@ -26,14 +20,7 @@ void addValueToRollingMax(int value, int* rollingMax, int range)
 	}
 }
 
-/// <summary>
-/// Finds max value in array between min and max index
-/// </summary>
-/// <param name="values"> 'array'</param>
-/// <param name="min"> 'min index'</param>
-/// <param name="max"> 'max index'</param>
-/// <returns>index of maximum element</returns>
-int findMax(int* values, int minVal=0, int maxVal=90)
+int findMax(int* values, int minVal = 0, int maxVal = 90)
 {
 	int maxValue = 0;
 	int maxIndex = minVal;
@@ -48,21 +35,13 @@ int findMax(int* values, int minVal=0, int maxVal=90)
 	return maxIndex;
 }
 
-/// <summary>
-/// Select lines from array that are in around peak in angle range from (peak-range) to (peak+range)
-/// </summary>
-/// <param name="lines">array of lines</param>
-/// <param name="numberOfLines">number of lines from which to select</param>
-/// <param name="maxLines">maximum number of selected lines, max number is 500</param>
-/// <param name="angle">angle in deg</param>
-/// <param name="range">angle range in which to look for lines</param>
-/// <param name="selectedLines">selected lines</param>
-void selectLines(float* lines,int numberOfLines, int maxLinesSelected, int angle, int range, float* selectedLines)
+
+int selectLinesNearPeak(float* lines, int numberOfLines, int peak, int range, float* selectedLines, int maxLinesSelected)
 {
 	int index, numberOfLinesSelected;
 	float minAngle, maxAngle, theta;
-	minAngle = (angle - range) * (M_PI / 180);
-	maxAngle= (angle + range) * (M_PI / 180);
+	minAngle = (peak - range) * (M_PI / 180);
+	maxAngle = (peak + range) * (M_PI / 180);
 
 	index = 0;
 	numberOfLinesSelected = 0;
@@ -71,26 +50,23 @@ void selectLines(float* lines,int numberOfLines, int maxLinesSelected, int angle
 		theta = lines[index * 2 + 1];
 		if (theta >= minAngle && theta <= maxAngle)
 		{
-			selectedLines[numberOfLinesSelected*2] = lines[index * 2];
-			selectedLines[numberOfLinesSelected*2 + 1] = theta;
+			selectedLines[numberOfLinesSelected * 2] = lines[index * 2];
+			selectedLines[numberOfLinesSelected * 2 + 1] = theta;
 			numberOfLinesSelected++;
 		}
 		index++;
 	}
+
+	return numberOfLinesSelected;
 }
 
-/// <summary>
-/// Divide lines into two "clusters" and remove outliers by angle from their polar coordinate representation
-/// </summary>
-/// <param name="lines"> 'array of lines given by rho and theta'</param>
-/// <param name="numberOfLines"> 'number of lines in array'</param>
-/// <param name="filteredLines"> 'filtered lines'</param>
-/// <param name="maxRange"> 'range of angles in which to look for similar lines'</param>
-/// <param name="peakWidth"> 'range of angles in which not to look for second group of lines'</param>
-void filterLines(float* lines, int numberOfLines, float* filteredLines, int maxRange = 5, int peakWidth=20)
+
+int findTwoBiggestClustersOfLines(float* lines, int numberOfLines, int maxRange, int peakWidth, int maxLinesSelected, float* horisontalLines, float* verticalLines)
 {
-	int* rollingMax=new int[MAX_ANGLE];
-	int lineTheta,firstPeak,secondPeak;
+	int* rollingMax = new int[MAX_ANGLE];
+	int lineTheta, firstPeak, secondPeak, numberOfHorisontalLines, numberOfVerticalLines;
+	int maxLinesInCluster = 100;
+	int angleDelta = 5;
 
 	for (int index = 0; index < numberOfLines; index++)
 	{
@@ -109,7 +85,7 @@ void filterLines(float* lines, int numberOfLines, float* filteredLines, int maxR
 	}
 	else if (firstPeak < MAX_ANGLE)
 	{
-		secondPeak = findMax(rollingMax, firstPeak+peakWidth, MAX_ANGLE);
+		secondPeak = findMax(rollingMax, firstPeak + peakWidth, MAX_ANGLE);
 	}
 	else
 	{
@@ -120,4 +96,95 @@ void filterLines(float* lines, int numberOfLines, float* filteredLines, int maxR
 	}
 
 	delete[] rollingMax;
+
+	numberOfHorisontalLines = selectLinesNearPeak(lines, numberOfLines, firstPeak, maxRange, horisontalLines, maxLinesSelected);
+	numberOfVerticalLines = selectLinesNearPeak(lines, numberOfLines, secondPeak, maxRange, verticalLines, maxLinesSelected);
+}
+void removeClusterMark(int* clusters, int size, int mark)
+{
+	for (int index = 0; index < size; index++)
+	{
+		if (clusters[index] == mark)
+		{
+			clusters[index] == -1;
+		}
+	}
+}
+int LinesDBSCAN(float* lines, int numberOfLines, int* clusters, float thetaDelta = 2.0, float rhoDelta = 10.0, int minClusterSize = 2)
+{
+	int index = 0;
+	int currentCluster = 0;
+	int linesInCurrentCluster;
+	float minRho, maxRho, minTheta, maxTheta, currentRho, currentTheta;
+
+	while (index < numberOfLines)
+	{
+		if (clusters[index] == 0)
+		{
+			clusters[index] = ++currentCluster;
+			minRho = lines[index * 2] - rhoDelta;
+			maxRho = minRho + 2 * rhoDelta;
+			minTheta = lines[index * 2 + 1] - thetaDelta;
+			maxTheta = minTheta + 2 * thetaDelta;
+			linesInCurrentCluster = 1;
+
+			for (int remainingIndex = index + 1; remainingIndex < numberOfLines; remainingIndex++)
+			{
+
+				currentRho = lines[remainingIndex * 2];
+				currentTheta = lines[remainingIndex * 2 + 1];
+				if (currentRho > minRho && currentRho < maxRho && currentTheta>minTheta && currentTheta < maxTheta)
+				{
+					clusters[remainingIndex] = currentCluster;
+					minRho = min(minRho, currentRho - rhoDelta);
+					maxRho = max(maxRho, maxRho + rhoDelta);
+					minTheta = min(minTheta, currentTheta - thetaDelta);
+					maxTheta = max(maxTheta, currentTheta + thetaDelta);
+					++linesInCurrentCluster;
+				}
+			}
+
+			if (linesInCurrentCluster < minClusterSize)
+			{
+				removeClusterMark(clusters, numberOfLines, currentCluster--);
+			}
+		}
+		++index;
+	}
+
+	return currentCluster;
+}
+
+
+int findAverageForClusteredLines(float* lines, int numberOfLines, int* clusters, int numberOfClusters)
+{
+	int* numberOfElementsPerCluster = new int[numberOfClusters + 1]{0};
+	float* rhoTotalPerCluster = new float[numberOfClusters + 1]{0};
+	float* thetaTotalPerCluster = new float[numberOfClusters + 1]{0};
+	float currentRho, currentTheta;
+	int cluster;
+	
+	for (int index = 0; index < numberOfLines; index++)
+	{
+		currentRho = lines[index * 2];
+		currentTheta = lines[index * 2 + 1];
+		cluster = clusters[index];
+		if (cluster > 0)
+		{
+			numberOfElementsPerCluster[cluster]++;
+			rhoTotalPerCluster[cluster] += currentRho;
+			thetaTotalPerCluster[cluster] += currentTheta;
+		}
+	}
+
+	for (int index = 1; index <= numberOfClusters; index++)
+	{
+		rhoTotalPerCluster[index] /= numberOfElementsPerCluster[index];
+		thetaTotalPerCluster[index] /= numberOfElementsPerCluster[index];
+	}
+
+
+	delete[] numberOfElementsPerCluster;
+	delete[] rhoTotalPerCluster;
+	delete[] thetaTotalPerCluster;
 }

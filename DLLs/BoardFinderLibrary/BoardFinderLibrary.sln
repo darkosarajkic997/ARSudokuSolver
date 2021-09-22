@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BoardFinderLibrary", "BoardFinderLibrary\BoardFinderLibrary.vcxproj", "{A63EF1E4-2931-4A12-B6EC-A7F503E2D08B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestDLL", "TestDLL\TestDLL.vcxproj", "{AB9C580C-A6F6-4133-BF7B-E4E646905AFB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A63EF1E4-2931-4A12-B6EC-A7F503E2D08B} = {A63EF1E4-2931-4A12-B6EC-A7F503E2D08B}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

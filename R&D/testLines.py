@@ -17,7 +17,7 @@ def find_sum_from_range(angle_range_low, angle_range_high, histo):
 
 
 if __name__=='__main__':
-    filter = True
+    filter = False
     config=configparser.ConfigParser()
     config.read('config.ini')
 
@@ -34,7 +34,7 @@ if __name__=='__main__':
     edges = cv2.erode(edges,kernel,iterations = 1)
     cv2.imshow('cannyjpg',edges)
 
-    lines = cv2.HoughLines(edges,1,np.pi/90,200)
+    lines = cv2.HoughLines(edges,1,np.pi/90,150)
 
     if not lines.any():
         print('No lines were found')
@@ -89,7 +89,7 @@ if __name__=='__main__':
         filtered_lines = lines
 
     angle=180
-    theta_histo=np.zeros((angle//2))
+    theta_histo=np.zeros((angle))
     for line in filtered_lines:
         rho,theta = line[0]
         #print(rho,theta)
@@ -103,7 +103,7 @@ if __name__=='__main__':
         y2 = int(y0 - 1500*(a))
 
         deg_theta=int(theta*(180/pi))%angle
-        if(deg_theta>90):
+        if(deg_theta>=90):
             deg_theta=90-(deg_theta%90)
         theta_histo[deg_theta]+=1
         print(deg_theta , theta, rho)
