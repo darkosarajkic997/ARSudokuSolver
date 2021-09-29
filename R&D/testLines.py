@@ -21,9 +21,9 @@ if __name__=='__main__':
     config=configparser.ConfigParser()
     config.read('config.ini')
 
-    img = cv2.imread(config['Resources']['image_lines']) 
+    img = cv2.imread(config['Resources']['image_lines'],cv2.IMREAD_GRAYSCALE) 
     start=time.time()
-    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    gray = img #cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     # dst = cv2.cornerHarris(gray,7,7,0.1)
     # dst = cv2.dilate(dst,None)
     gray=cv2.GaussianBlur(gray, (7, 7), 3)
@@ -35,6 +35,7 @@ if __name__=='__main__':
     cv2.imshow('cannyjpg',edges)
 
     lines = cv2.HoughLines(edges,1,np.pi/90,150)
+
 
     if not lines.any():
         print('No lines were found')
@@ -103,8 +104,8 @@ if __name__=='__main__':
         y2 = int(y0 - 1500*(a))
 
         deg_theta=int(theta*(180/pi))%angle
-        if(deg_theta>=90):
-            deg_theta=90-(deg_theta%90)
+        # if(deg_theta>=90):
+        #     deg_theta=90-(deg_theta%90)
         theta_histo[deg_theta]+=1
         print(deg_theta , theta, rho)
         if(deg_theta<75 or deg_theta>140):
@@ -113,7 +114,7 @@ if __name__=='__main__':
             cv2.line(img,(x1,y1),(x2,y2),(255,255,0),2)
     # for line in lines:
     #     cv2.line(img,(line[0][0],line[0][1]),(line[0][2],line[0][3]),(0,0,255),2)
-    print(time.time()-start)
+    #print(time.time()-start)
     
     
     # img[dst>0.01*dst.max()]=[255,0,0]
@@ -121,8 +122,8 @@ if __name__=='__main__':
     cv2.imshow('houghjpg',img)
     
 
-    rolling_histo_max=np.zeros((90))
-    for index in range(5,86):
+    rolling_histo_max=np.zeros((180))
+    for index in range(5,176):
         rolling_histo_max[index]=find_sum_from_range(index-5,index+5,theta_histo)
 
     # plt.bar(np.arange(len(theta_histo)),theta_histo)
