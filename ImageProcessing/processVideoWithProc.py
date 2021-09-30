@@ -143,7 +143,7 @@ if __name__ == "__main__":
                             solution_key=new_solution_key
                             new_solution_key=None
                         if(board_is_solved and solution is not None):
-                            solved = processImage.draw_solution_mask(img_warped.shape, width, height, solution[0], solution[1])
+                            solved = processImage.draw_solution_mask(img_warped.shape, solution[0], solution[1])
                             solved = cv2.warpPerspective(solved, smooth_matrix, (frame.shape[1], frame.shape[0]), borderValue=255, flags=cv2.WARP_INVERSE_MAP)
                             frame[:, :, 1] = np.bitwise_and(frame[:, :, 1], solved)
                             #frame = cv2.drawContours(frame, [conture], -1, (255, 0, 255), 2)

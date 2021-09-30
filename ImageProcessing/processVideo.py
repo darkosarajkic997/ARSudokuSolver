@@ -60,7 +60,7 @@ if __name__ == "__main__":
                     else:
                         board_is_solved=False
                 elif(board_is_solved):
-                    solved=processImage.draw_solution_mask(img_warped.shape,width,height,solution,sol_values)
+                    solved=processImage.draw_solution_mask(img_warped.shape,solution,sol_values)
                     solved=cv2.warpPerspective(solved,perspective_matrix,(frame.shape[1],frame.shape[0]),borderValue=255,flags=cv2.WARP_INVERSE_MAP)
                     frame[:,:,1]=np.bitwise_and(frame[:,:,1],solved)
             else:
