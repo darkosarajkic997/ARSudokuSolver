@@ -12,29 +12,16 @@ from Solver.sudokuBoard import SudokuBoard
 NUMBER_OF_PROCESSES = 1
 
 
-def find_new_solution(image, model):
-    cells = processImage.get_cells_from_image(
-        image, image.shape[1], image.shape[0])
-    filtered_cells, values = processImage.filter_cells_for_classification(
-        cells)
-    batch = np.concatenate(filtered_cells)
-    prediction = model.predict_on_batch(batch)
-    predicted_values = np.argmax(prediction, axis=1)+1
-    board_input_matrix = np.copy(values)
-    predicted_index = 0
-    for index, value in enumerate(values):
-        if(value == -1):
-            board_input_matrix[index] = int(predicted_values[predicted_index])
-            predicted_index += 1
-    game_board = SudokuBoard(np.reshape(
-        board_input_matrix, (9, 9)), input_type='array')
-    if(game_board.validate_board() and game_board.solve()):
-        return (True, game_board.board, values)
-
-    return (False, None, None)
-
-
 def generate_matrix_from_image(image, model):
+    """Find numbers on image and solve sudoku
+
+    Args:
+        image (numpy array): Image of sudoku board
+        model (Keras model): Pretrained Keras model for OCR
+
+    Returns:
+        ((bool),(numpy array)): Tuple where first element indicates whether solution is found and second is solution if one is found
+    """
     cells = processImage.get_cells_from_image(
         image, image.shape[1], image.shape[0])
     filtered_cells, values = processImage.filter_cells_for_classification(
@@ -55,6 +42,16 @@ def generate_matrix_from_image(image, model):
 
 
 def solving_worker(data_queue, result_queue, board_dict, model):
+    """Create background worker that process images, worker check shared data_queue for data and if find one process it.
+    After finding what numbers are on image if board was solved earlier writes key from shared dictionary with solutions in shared result queue, else
+    if board is not solved, worker solves it, writes solution in shared dictionarya and key in shared result queue 
+
+    Args:
+        data_queue (Queue): Shared queue that contains conture images that are found in main process 
+        result_queue (Queue]): Shared queue that contains keys for results from shared dictionary  
+        board_dict (Dictionary): Shared dictionary that contains key, value pairs where key is string representation of unsolved board and value is solved board
+        model (Keras): Pretrained Keras model for OCR
+    """
     from tensorflow import keras
     model = keras.models.load_model(model)
     while(True):
