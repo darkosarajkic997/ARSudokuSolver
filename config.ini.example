@@ -1,9 +1,9 @@
 [Resources]
 image=path to test image
 video=path to test video
-dll=path to dll
-model=path to model
+dll=path to c++ dll --REQURED TO BE ABLE TO RUN MAIN SCRIPT
+model=path to trained Keras model --REQURED TO BE ABLE TO RUN MAIN SCRIPT
 
 [Data]
-digits=path to original images for creating dataset
-dataset=path to dataset for OCR training
+digits=path to original images for creating dataset -- REQUIRED TO BE ABLE TO RUN TRAINING SCRIPT FOR OCR
+dataset=path to dataset for OCR training -- REQUIRED TO BE ABLE TO RUN TRAINING SCRIPT FOR OCR
