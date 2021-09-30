@@ -74,5 +74,7 @@ int houghLineDetector(unsigned __int8* picture, int width, int height, int* line
 	numberOfVoters = maxHoughSpace * votersThreshold;
 	numberOfLines = FindingLocalMaximums(houghSpaceMatrix, rho, lines, numberOfVoters, maxNumberOfLines);
 
+	delete[] houghSpaceMatrix;
+
 	return numberOfLines;
 }
