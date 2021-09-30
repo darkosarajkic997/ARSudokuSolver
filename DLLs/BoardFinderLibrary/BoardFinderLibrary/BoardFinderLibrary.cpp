@@ -86,7 +86,7 @@ int selectLinesNearPeak(int* lines, int numberOfLines, int peak, int range, int*
 }
 
 
-void findTwoBiggestClustersOfLines(int* lines, int numberOfLines, int rollingRange, int peakWidth, int maxLinesSelected, int* horisontalLines, int* verticalLines, int* numberOfHorisontalLines, int* numberOfVerticalLines)
+void findTwoBiggestClustersOfLines(int* lines, int numberOfLines, int rollingRange, int peakWidth, int maxLinesSelected, int* horizontalLines, int* verticalLines, int* numberOfHorizontalLines, int* numberOfVerticalLines)
 {
 	int* rollingMax = new int[MAX_ANGLE] {0};
 	int lineTheta, firstPeak, secondPeak;
@@ -116,7 +116,7 @@ void findTwoBiggestClustersOfLines(int* lines, int numberOfLines, int rollingRan
 
 	delete[] rollingMax;
 
-	*numberOfHorisontalLines = selectLinesNearPeak(lines, numberOfLines, firstPeak, rollingRange, horisontalLines, maxLinesSelected);
+	*numberOfHorizontalLines = selectLinesNearPeak(lines, numberOfLines, firstPeak, rollingRange, horizontalLines, maxLinesSelected);
 	*numberOfVerticalLines = selectLinesNearPeak(lines, numberOfLines, secondPeak, rollingRange, verticalLines, maxLinesSelected);
 }
 void removeClusterMark(int* clusters, int size, int mark)
@@ -208,3 +208,23 @@ void findAverageForClusteredLines(int* lines, int numberOfLines, int* clusters, 
 	delete[] rhoTotalPerCluster;
 	delete[] thetaTotalPerCluster;
 }
+
+
+//void findHorizontalAndVerticalLines(int* lines,int numberOfLines, int* numberOfHorizontalClusterdLines, int* numberOfVerticalClusterdLines, float* horizontalClusterdLines, float* verticalClusterdLines, int rollingRange, int peakWidth)
+//{
+//	int numberOfHorizontalLines, numberOfVerticalLines;
+//	int* horizontalLines = new int[MAX_LINES];
+//	int* verticalLines = new int[MAX_LINES];
+//	int* clustersHor = new int[MAX_LINES];
+//	int* clustersVer = new int[MAX_LINES];
+//	
+//	findTwoBiggestClustersOfLines(lines, numberOfLines, rollingRange, peakWidth, MAX_LINES, horizontalLines, verticalLines, &numberOfHorizontalLines, &numberOfVerticalLines);
+//	
+//	*numberOfHorizontalClusterdLines = linesDBSCAN(horizontalLines, numberOfHorizontalLines, clustersHor);
+//	horizontalClusterdLines = new float[*numberOfHorizontalClusterdLines];
+//	findAverageForClusteredLines(horizontalLines, numberOfHorizontalLines, clustersHor, *numberOfHorizontalClusterdLines, horizontalClusterdLines);
+//
+//	*numberOfVerticalClusterdLines = linesDBSCAN(verticalLines, numberOfVerticalLines, clustersVer);
+//	verticalClusterdLines = new float[*numberOfVerticalClusterdLines];
+//	findAverageForClusteredLines(verticalLines, numberOfVerticalLines, clustersVer, *numberOfVerticalClusterdLines, horizontalClusterdLines);
+//}

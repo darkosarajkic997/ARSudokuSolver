@@ -3,7 +3,7 @@
 #include"BoardFinderLibrary.h"
 
 
-void drawLinesOnImageAndDisplay(float* lines, int numberOfLines, cv::Mat_<unsigned __int8> image, int colorRGB = 255)
+void drawLinesOnImageAndDisplay(float* lines, int numberOfLines, cv::Mat_<unsigned __int8> image, int colorRGB = 255, bool display=true)
 {
 	float rho, theta, a, b;
 	int x0, x1, x2, y0, y1, y2;
@@ -25,10 +25,13 @@ void drawLinesOnImageAndDisplay(float* lines, int numberOfLines, cv::Mat_<unsign
 		cv::line(image, t1, t2, cv::Scalar(colorRGB), 2);
 	}
 
-	cv::namedWindow("Lines", cv::WINDOW_AUTOSIZE);
-	cv::imshow("Lines", image);
-	cv::waitKey(0);
-	cv::destroyAllWindows();
+	if (display)
+	{
+		cv::namedWindow("Lines", cv::WINDOW_AUTOSIZE);
+		cv::imshow("Lines", image);
+		cv::waitKey(0);
+		cv::destroyAllWindows();
+	}
 }
 
 
@@ -39,15 +42,15 @@ int main(int argc, char* argv[])
 		int imgRows, imgCols, numberOfHorisontalLines, numberOfVerticalLines;
 		int horisontalClusters, verticalClusters, rollingRange, peakWidth, numberOfLines, numberOfVoters, minNumberOfLines, maxNumberOfLines, votersStep;
 		int rho, theta;
-		int* horisontalLines = new int[int(MAX_LINES / 2)];
-		int* verticalLines = new int[int(MAX_LINES / 2)];
-		int* clusters;
-		float* clusteredLines;
+		int *horisontalLines = new int[int(MAX_LINES / 2)];
+		int *verticalLines = new int[int(MAX_LINES / 2)];
+		int *clusters, *lines;
+		float *clusteredLines;
 		float votersThreshold;
 
 		std::string imagePath = argv[1];
 		cv::Mat_<unsigned __int8> image = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
-		cv::Mat imageClone = image.clone();
+		
 
 		imgRows = image.rows;
 		imgCols = image.cols;
@@ -66,22 +69,20 @@ int main(int argc, char* argv[])
 				picture[imgCols * rowIndex + colIndex] = imageCanny[rowIndex][colIndex];
 			}
 
-		int* lines = new int[MAX_LINES * 2];
-		votersThreshold = 0.45;
+		lines = new int[MAX_LINES * 2];
+		votersThreshold = 0.55;
 		numberOfLines = houghLineDetector(picture, imgCols, imgRows,lines, votersThreshold);
 		
 		
 		rollingRange = 10;
 		peakWidth = 30;
-		findTwoBiggestClustersOfLines(lines, numberOfLines, rollingRange, peakWidth, int(MAX_LINES / 2), horisontalLines, verticalLines, &numberOfHorisontalLines, &numberOfVerticalLines);
-		
-		
+		findTwoBiggestClustersOfLines(lines, numberOfLines, rollingRange, peakWidth, MAX_LINES, horisontalLines, verticalLines, &numberOfHorisontalLines, &numberOfVerticalLines);
 		
 		clusters = new int[int(MAX_LINES / 2)]{ 0 };
 		horisontalClusters = linesDBSCAN(horisontalLines, numberOfHorisontalLines, clusters);
 		clusteredLines = new float[2 * horisontalClusters];
 		findAverageForClusteredLines(horisontalLines, numberOfHorisontalLines, clusters, horisontalClusters, clusteredLines);
-		drawLinesOnImageAndDisplay(clusteredLines, horisontalClusters, imageClone, 100);
+		drawLinesOnImageAndDisplay(clusteredLines, horisontalClusters, image, 100, false);
 		delete[] clusters;
 		delete[] clusteredLines;
 
@@ -89,7 +90,7 @@ int main(int argc, char* argv[])
 		verticalClusters = linesDBSCAN(verticalLines, numberOfVerticalLines, clusters);
 		clusteredLines = new float[2 * verticalClusters];
 		findAverageForClusteredLines(verticalLines, numberOfVerticalLines, clusters, verticalClusters, clusteredLines);
-		drawLinesOnImageAndDisplay(clusteredLines, verticalClusters, imageClone, 100);
+		drawLinesOnImageAndDisplay(clusteredLines, verticalClusters, image, 100);
 
 
 		delete[] lines;
