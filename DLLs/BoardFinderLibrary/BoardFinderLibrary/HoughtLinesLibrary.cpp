@@ -52,7 +52,7 @@ int FindingLocalMaximums(int* houghSpaceMatrix, int rhoMax, int* lines, int numb
 {
 
 	int lineIndex = 0;
-	for (int rho = 0; rho < 2*rhoMax; rho++)
+	for (int rho = 0; rho < 2 * rhoMax; rho++)
 		for (int theta = 0; theta < thetaMax; theta++)
 		{
 			if ((houghSpaceMatrix[thetaMax * rho + theta] > numberOfVoters) && (lineIndex < maxNumberOfLines))
@@ -68,8 +68,8 @@ int FindingLocalMaximums(int* houghSpaceMatrix, int rhoMax, int* lines, int numb
 int houghLineDetector(unsigned __int8* picture, int width, int height, int* lines, float votersThreshold, int maxNumberOfLines)
 {
 	int maxHoughSpace, numberOfVoters, numberOfLines;
-	int rho = height+width;
-	int* houghSpaceMatrix = new int[2*rho * MAX_ANGLE]{ 0 };
+	int rho = height + width;
+	int* houghSpaceMatrix = new int[2 * rho * MAX_ANGLE]{ 0 };
 	maxHoughSpace = CalculatingRhoThetaMatrix(picture, width, height, rho, MAX_ANGLE, houghSpaceMatrix);
 	numberOfVoters = maxHoughSpace * votersThreshold;
 	numberOfLines = FindingLocalMaximums(houghSpaceMatrix, rho, lines, numberOfVoters, maxNumberOfLines);

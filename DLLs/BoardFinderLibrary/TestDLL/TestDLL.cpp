@@ -3,7 +3,7 @@
 #include"BoardFinderLibrary.h"
 
 
-void drawLinesOnImageAndDisplay(float* lines, int numberOfLines, cv::Mat_<unsigned __int8> image, int colorRGB = 255, bool display=true)
+void drawLinesOnImageAndDisplay(float* lines, int numberOfLines, cv::Mat_<unsigned __int8> image, int colorRGB = 255, bool display = true)
 {
 	float rho, theta, a, b;
 	int x0, x1, x2, y0, y1, y2;
@@ -40,25 +40,26 @@ int main(int argc, char* argv[])
 	if (argc > 1)
 	{
 		int imgRows, imgCols, numberOfHorisontalLines, numberOfVerticalLines;
-		int horisontalClusters, verticalClusters, rollingRange, peakWidth, numberOfLines, numberOfVoters, minNumberOfLines, maxNumberOfLines, votersStep;
+		int horisontalClusters, verticalClusters, rollingRange, peakWidth;
+		int numberOfLines, numberOfVoters, minNumberOfLines, maxNumberOfLines, votersStep;
 		int rho, theta;
-		int *horisontalLines = new int[int(MAX_LINES / 2)];
-		int *verticalLines = new int[int(MAX_LINES / 2)];
-		int *clusters, *lines;
-		float *clusteredLines;
+		int* horisontalLines = new int[int(MAX_LINES / 2)];
+		int* verticalLines = new int[int(MAX_LINES / 2)];
+		int* clusters, * lines;
+		float* clusteredLines;
 		float votersThreshold;
 
 		std::string imagePath = argv[1];
 		cv::Mat_<unsigned __int8> image = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
-		
+
 
 		imgRows = image.rows;
 		imgCols = image.cols;
 
-		
+
 		cv::Mat_<unsigned __int8> imageCanny;
 		cv::Canny(image, imageCanny, 140, 200);
-		
+
 
 
 		unsigned __int8* picture = new unsigned __int8[imgRows * imgCols];
@@ -71,13 +72,13 @@ int main(int argc, char* argv[])
 
 		lines = new int[MAX_LINES * 2];
 		votersThreshold = 0.55;
-		numberOfLines = houghLineDetector(picture, imgCols, imgRows,lines, votersThreshold);
-		
-		
+		numberOfLines = houghLineDetector(picture, imgCols, imgRows, lines, votersThreshold);
+
+
 		rollingRange = 10;
 		peakWidth = 30;
 		findTwoBiggestClustersOfLines(lines, numberOfLines, rollingRange, peakWidth, MAX_LINES, horisontalLines, verticalLines, &numberOfHorisontalLines, &numberOfVerticalLines);
-		
+
 		clusters = new int[int(MAX_LINES / 2)]{ 0 };
 		horisontalClusters = linesDBSCAN(horisontalLines, numberOfHorisontalLines, clusters);
 		clusteredLines = new float[2 * horisontalClusters];
