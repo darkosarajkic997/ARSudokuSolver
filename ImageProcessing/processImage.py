@@ -13,6 +13,14 @@ CELL_DIM=50
 
 
 def preprocess_image(image):
+    """Function preprocess image, BGR2GRAY-> GaussianBlur-> adaptiveThreshold-> Close-> Open
+
+    Args:
+        image (numpy array): Color image that needs to be preprocessed
+
+    Returns:
+        numpy array: Gray scale image that is preprocessed
+    """
     new_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     new_image = cv2.GaussianBlur(new_image, (5, 5), 3)
     new_image = cv2.adaptiveThreshold(
@@ -23,7 +31,16 @@ def preprocess_image(image):
     return new_image
 
 
-def find_board_corners(image):
+def find_board_corners(image, perimeter_threshold=0.05):
+    """Find biggest conture on image that can be aproximated with four lines
+
+    Args:
+        image (numpy array): Image in which to search for conture
+        perimeter_threshold (float, optional): Maximum perimetre difference between conture and conture aproximation. Defaults to 0.05.
+
+    Returns:
+        numpy array, float: 2D Array of coordinates of maximum conture, size of maximum conture
+    """
     contours, _ = cv2.findContours(
         image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     max_area = 0
@@ -31,7 +48,7 @@ def find_board_corners(image):
     
     for conture in contours:
         peri = cv2.arcLength(conture, True)
-        conture_approx = cv2.approxPolyDP(conture, 0.05 * peri, True)
+        conture_approx = cv2.approxPolyDP(conture, perimeter_threshold * peri, True)
         area = cv2.contourArea(conture_approx)
         if(area > max_area and len(conture_approx) == 4):
             max_area = area
@@ -40,6 +57,14 @@ def find_board_corners(image):
     return max_conture, max_area
 
 def orient_points_in_conture_clockwise(conture):
+    """Orient coordinates in conture in clockwise direction starting from top left corner
+
+    Args:
+        conture (numpy array): 2D array of coordinates
+
+    Returns:
+        numpy array: 2D array of ordered coordinates 
+    """
     ordered_index=np.argpartition(conture[:,1], 2)
     top2_index=ordered_index[:2]
     bottom2_index=ordered_index[2:]
@@ -62,11 +87,28 @@ def orient_points_in_conture_clockwise(conture):
     return np.array([top_left,top_right,bottom_right,bottom_left])
 
 
-def find_distance(x, y):
-    return np.sqrt((x[0]-y[0])**2+(x[1]-y[1])**2)
+def find_distance(pointA, pointB):
+    """Finds distance between two points A and B
+
+    Args:
+        pointA (array): Coordinates of point A
+        pointB (array): Coordinates of point B
+
+    Returns:
+        {float): Distance between points
+    """
+    return np.sqrt((pointA[0]-pointB[0])**2+(pointA[1]-pointB[1])**2)
 
 
 def get_perspective_transformation_matrix(conture):
+    """Get perspective tranformation from four corners of square
+
+    Args:
+        conture (numpy array): 2D array of corner coordinates
+
+    Returns:
+        (numpy array), (integer), (integer): 3x3 perspective matrix, width and height of square that is transformed
+    """
     source_points = np.reshape(conture, (4, 2)).astype(np.float32)
     source_points=orient_points_in_conture_clockwise(source_points)
 
@@ -84,6 +126,18 @@ def get_perspective_transformation_matrix(conture):
     return perspective_matrix, width, height
 
 def get_cells_from_image(image,width,height,margin_size=0.1, number_of_cells=9):
+    """Cut image into 9x9 cells and return array of cells
+
+    Args:
+        image (numpy array): Image of sudoku board
+        width (int): Width of image
+        height (int): Height of image
+        margin_size (float, optional): Percentage of each cell that is removed from edge. Defaults to 0.1.
+        number_of_cells (int, optional): Number of cells in row or column of board. Defaults to 9.
+
+    Returns:
+        (list): Numpy array that contains cells cutted from image which have size CELL_DIM*CELL_DIM
+    """
     size_x=width/number_of_cells
     size_y=height/number_of_cells
     margin_x=size_x*margin_size
@@ -102,6 +156,14 @@ def get_cells_from_image(image,width,height,margin_size=0.1, number_of_cells=9):
     return cells
 
 def filter_cells_for_classification(cells):
+    """Filter cells that have number in them and remove noise from that cells
+
+    Args:
+        cells (numpy array): Numpy array that contains cells cutted from image which have size CELL_DIM*CELL_DIM
+
+    Returns:
+        (list),(list):Cells that have numbers, list that contains position in sudoku board of each cell that have number  
+    """
     filtered_cells=[]
     values=[]
     for cell in cells:
@@ -127,22 +189,37 @@ def filter_cells_for_classification(cells):
     return filtered_cells,values
 
 
-def draw_solution_mask(shape,width,height,matrix,filled_cells,size_up_dim=60):
+def draw_solution_mask(shape,matrix,filled_cells,size_up_dim=60, x_correction=0.3, y_correction=0.78):
+    """Create mask with with numbers that are missing from solution on white background
+
+    Args:
+        shape ((integer,integer)): Shape of mask to be created
+        matrix (numpy array): Sudoku board matrix that is solved
+        filled_cells ([numpy array]): Array that contains markers for all field that are filled in original image
+        size_up_dim (int, optional): Size of cell in pixel above which font is increased. Defaults to 60.
+        x_correction (float, optional): Offset on X axis in cell from which to draw number. Defaults to 0.3.
+        y_correction (float, optional): Offset on Y axis in cell from which to draw number. Defaults to 0.78.
+
+    Returns:
+        (numpy array): Mask with missing number drawn on it
+    """
     image=np.full(shape,255,dtype='uint8')
-    fontScale = 1
     color = (0, 0, 0)
     thickness = 2
     font = cv2.FONT_HERSHEY_SCRIPT_COMPLEX
-    dim_x=int(width/9)
-    dim_y=int(height/9)
+    dim_x=shape[1]/9
+    dim_y=shape[0]/9
     if(dim_x>size_up_dim and dim_y>size_up_dim):
         fontScale=2
+    else:
+        fontScale = 1
+
     index=0
     for row in range(0,9):
         for column in range(0,9):
             if(filled_cells[index]==0):
-                position_x=int(column*dim_x+dim_x*0.3)
-                position_y=int(row*dim_y+dim_y*0.78)
+                position_x=int(column*dim_x+dim_x*x_correction)
+                position_y=int(row*dim_y+dim_y*y_correction)
                 image=cv2.putText(
                     img=image,
                     text=str(int(matrix[row,column])),
@@ -159,6 +236,16 @@ def draw_solution_mask(shape,width,height,matrix,filled_cells,size_up_dim=60):
 
 
 def check_border(image, threshold=0.2, border_width=5):
+    """Checks if border of image are filled or not  
+
+    Args:
+        image (numpy array): Image which borders are checked
+        threshold (float, optional): Minimum percentage of boarder that needs to be filled. Defaults to 0.2.
+        border_width (int, optional): Width of boarder that is checked. Defaults to 5.
+
+    Returns:
+        (bool): If all boarders are filled above threshold returns True else returns False
+    """
     width=image.shape[1]
     height=image.shape[0]
     
@@ -171,7 +258,6 @@ def check_border(image, threshold=0.2, border_width=5):
     bottom_border_pct_filed=np.count_nonzero(bottom_border)/(width*border_width)
     left_border_pct_filed=np.count_nonzero(left_border)/(height*border_width)
     right_border_pct_filed=np.count_nonzero(right_border)/(height*border_width)
-    #print(top_border_pct_filed,bottom_border_pct_filed,left_border_pct_filed,right_border_pct_filed)
     if(top_border_pct_filed>threshold and bottom_border_pct_filed>threshold and left_border_pct_filed>threshold and right_border_pct_filed>threshold):
         return True
     else:
@@ -230,7 +316,7 @@ if __name__ == "__main__":
                 
         if(game_board.solve()):
             print(time.time()-start_time)  
-            solved=draw_solution_mask(img_warped.shape,width,height,game_board.board,values)
+            solved=draw_solution_mask(img_warped.shape,game_board.board,values)
             solved=cv2.warpPerspective(solved,perspective_matrix,(image.shape[1],image.shape[0]),borderValue=255,flags=cv2.WARP_INVERSE_MAP)
 
             #cv2.imshow('solved',solved)
