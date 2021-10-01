@@ -44,7 +44,7 @@ def generate_matrix_from_image(image, model):
 def solving_worker(data_queue, result_queue, board_dict, model):
     """Create background worker that process images, worker check shared data_queue for data and if find one process it.
     After finding what numbers are on image if board was solved earlier writes key from shared dictionary with solutions in shared result queue, else
-    if board is not solved, worker solves it, writes solution in shared dictionarya and key in shared result queue 
+    if board is not solved, worker solves it, writes solution in shared dictionary and key in shared result queue 
 
     Args:
         data_queue (Queue): Shared queue that contains conture images that are found in main process 

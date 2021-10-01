@@ -10,13 +10,14 @@
 #define MAX_LINES 500
 
 /// <summary>
-/// Increment value for rolling max for values near angle
+/// Increment value of rolling max for values near angle
 /// </summary>
 /// <param name="value"> -> Angle </param>
 /// <param name="rollingMax"> -> Array of integers that represent rolling max</param>
 /// <param name="range"> -> Range for which to increment rolling max [angle-range,angle+range]</param>
+/// <param name="maxAngle"> -> Maximum index of rollingMax </param>
 /// <returns></returns>
-extern "C" BOARDFINDERLIBRARY_API void addValueToRollingMax(int value, int* rollingMax, int range);
+extern "C" BOARDFINDERLIBRARY_API void addValueToRollingMax(int value, int* rollingMax, int range, int maxAngle = MAX_ANGLE);
 /// <summary>
 /// Finds max value in array on index range from minVal to maxVal
 /// </summary>
@@ -30,7 +31,7 @@ extern "C" BOARDFINDERLIBRARY_API int findMax(int* values, int minVal = 0, int m
 /// </summary>
 /// <param name="lines"> -> Array of lines, one line is represented with two adjacent elements in array where first one is theta in degrees and second one is rho</param>
 /// <param name="numberOfLines"> -> Number of lines in array</param>
-/// <param name="peak"> -> Angle which represents the peak near which lines are selected</param>
+/// <param name="peak"> -> Angle that represents peak near which lines are selected</param>
 /// <param name="range"> -> Width of range from which to select lines [peak-range, peak+range]</param>
 /// <param name="selectedLines"> -> Lines that are selected, one line is represented with two adjacent elements in array where first one is theta in degrees and second one is rho</param>
 /// <param name="maxLinesSelected"> -> Maximum number of lines that could be selected</param>
@@ -105,7 +106,7 @@ extern "C" BOARDFINDERLIBRARY_API void getCosTable(float* cosTable, int maxAngle
 /// <param name="theta"> -> Maximum value of theta</param>
 /// <param name="houghSpaceMatrix"> -> Array that represents Hough space matrix of size [2*rho,theta]</param>
 /// <returns>Maximum number of voters from Hough space matrix</returns>
-extern "C" BOARDFINDERLIBRARY_API int CalculatingRhoThetaMatrix(unsigned __int8* picture, int width, int height, int rho, int theta, int* houghSpaceMatrix);
+extern "C" BOARDFINDERLIBRARY_API int calculateHoughSpaceMatrix(unsigned __int8* picture, int width, int height, int rho, int theta, int* houghSpaceMatrix);
 /// <summary>
 /// Finds lines that have number of voters greater than required
 /// </summary>
@@ -116,7 +117,7 @@ extern "C" BOARDFINDERLIBRARY_API int CalculatingRhoThetaMatrix(unsigned __int8*
 /// <param name="maxNumberOfLines"> -> Maximum possible number of lines to be selected</param>
 /// <param name="thetaMax"> -> Maximum value for theta</param>
 /// <returns>Number of lines that are selected</returns>
-extern "C" BOARDFINDERLIBRARY_API int FindingLocalMaximums(int* houghSpaceMatrix, int rhoMax, int* lines, int numberOfVoters, int maxNumberOfLines, int thetaMax = MAX_ANGLE);
+extern "C" BOARDFINDERLIBRARY_API int findLinesAboveVotersThreshold(int* houghSpaceMatrix, int rhoMax, int* lines, int numberOfVoters, int maxNumberOfLines, int thetaMax = MAX_ANGLE);
 /// <summary>
 /// Finds all lines on image that is preprocessed with edge detector using Hough transform
 /// </summary>

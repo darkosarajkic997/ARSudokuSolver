@@ -18,7 +18,7 @@ void getCosTable(float* cosTable, int maxAngle)
 }
 
 
-int CalculatingRhoThetaMatrix(unsigned __int8* picture, int width, int height, int rho, int theta, int* houghSpaceMatrix)
+int calculateHoughSpaceMatrix(unsigned __int8* picture, int width, int height, int rho, int theta, int* houghSpaceMatrix)
 {
 	int currentValue, drho;
 	float* cosTable, * sinTable;
@@ -48,7 +48,7 @@ int CalculatingRhoThetaMatrix(unsigned __int8* picture, int width, int height, i
 	return houghSpaceMax;
 }
 
-int FindingLocalMaximums(int* houghSpaceMatrix, int rhoMax, int* lines, int numberOfVoters, int maxNumberOfLines, int thetaMax)
+int findLinesAboveVotersThreshold(int* houghSpaceMatrix, int rhoMax, int* lines, int numberOfVoters, int maxNumberOfLines, int thetaMax)
 {
 
 	int lineIndex = 0;
@@ -70,9 +70,9 @@ int houghLineDetector(unsigned __int8* picture, int width, int height, int* line
 	int maxHoughSpace, numberOfVoters, numberOfLines;
 	int rho = height + width;
 	int* houghSpaceMatrix = new int[2 * rho * MAX_ANGLE]{ 0 };
-	maxHoughSpace = CalculatingRhoThetaMatrix(picture, width, height, rho, MAX_ANGLE, houghSpaceMatrix);
+	maxHoughSpace = calculateHoughSpaceMatrix(picture, width, height, rho, MAX_ANGLE, houghSpaceMatrix);
 	numberOfVoters = maxHoughSpace * votersThreshold;
-	numberOfLines = FindingLocalMaximums(houghSpaceMatrix, rho, lines, numberOfVoters, maxNumberOfLines);
+	numberOfLines = findLinesAboveVotersThreshold(houghSpaceMatrix, rho, lines, numberOfVoters, maxNumberOfLines);
 
 	delete[] houghSpaceMatrix;
 

@@ -3,7 +3,38 @@
 #include"BoardFinderLibrary.h"
 
 
-void drawLinesOnImageAndDisplay(float* lines, int numberOfLines, cv::Mat_<unsigned __int8> image, int colorRGB = 255, bool display = true)
+void drawLinesOnImageAndDisplay(int* lines, int numberOfLines, cv::Mat_<unsigned __int8> image, int colorRGB = 255, bool display = true)
+{
+	float rho, theta, a, b;
+	int x0, x1, x2, y0, y1, y2;
+
+	for (int index = 0; index < numberOfLines; index++)
+	{
+		rho = lines[2 * index];
+		theta = (lines[2 * index + 1] * CV_PI / 180);
+		a = cos(theta);
+		b = sin(theta);
+		x0 = a * rho;
+		y0 = b * rho;
+		x1 = int(x0 - 1500 * b);
+		y1 = int(y0 + 1500 * a);
+		x2 = int(x0 + 1500 * b);
+		y2 = int(y0 - 1500 * a);
+		cv::Point t1(x1, y1);
+		cv::Point t2(x2, y2);
+		cv::line(image, t1, t2, cv::Scalar(colorRGB), 2);
+	}
+
+	if (display)
+	{
+		cv::namedWindow("Lines", cv::WINDOW_AUTOSIZE);
+		cv::imshow("Lines", image);
+		cv::waitKey(0);
+		cv::destroyAllWindows();
+	}
+}
+
+void drawLinesOnImageAndDisplayF(float* lines, int numberOfLines, cv::Mat_<unsigned __int8> image, int colorRGB = 255, bool display = true)
 {
 	float rho, theta, a, b;
 	int x0, x1, x2, y0, y1, y2;
@@ -71,9 +102,10 @@ int main(int argc, char* argv[])
 			}
 
 		lines = new int[MAX_LINES * 2];
-		votersThreshold = 0.55;
+		votersThreshold = 0.5;
 		numberOfLines = houghLineDetector(picture, imgCols, imgRows, lines, votersThreshold);
 
+		drawLinesOnImageAndDisplay(lines, numberOfLines, imageCanny, 100);
 
 		rollingRange = 10;
 		peakWidth = 30;
@@ -83,7 +115,7 @@ int main(int argc, char* argv[])
 		horisontalClusters = linesDBSCAN(horisontalLines, numberOfHorisontalLines, clusters);
 		clusteredLines = new float[2 * horisontalClusters];
 		findAverageForClusteredLines(horisontalLines, numberOfHorisontalLines, clusters, horisontalClusters, clusteredLines);
-		drawLinesOnImageAndDisplay(clusteredLines, horisontalClusters, image, 100, false);
+		drawLinesOnImageAndDisplayF(clusteredLines, horisontalClusters, image, 100, false);
 		delete[] clusters;
 		delete[] clusteredLines;
 
@@ -91,7 +123,7 @@ int main(int argc, char* argv[])
 		verticalClusters = linesDBSCAN(verticalLines, numberOfVerticalLines, clusters);
 		clusteredLines = new float[2 * verticalClusters];
 		findAverageForClusteredLines(verticalLines, numberOfVerticalLines, clusters, verticalClusters, clusteredLines);
-		drawLinesOnImageAndDisplay(clusteredLines, verticalClusters, image, 100);
+		drawLinesOnImageAndDisplayF(clusteredLines, verticalClusters, image, 100);
 
 
 		delete[] lines;

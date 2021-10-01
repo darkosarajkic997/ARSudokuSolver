@@ -6,7 +6,7 @@
 #include<iostream>
 
 
-void addValueToRollingMax(int value, int* rollingMax, int range)
+void addValueToRollingMax(int value, int* rollingMax, int range, int maxAngle)
 {
 	int minRange, maxRange;
 	minRange = value - range;
@@ -18,18 +18,18 @@ void addValueToRollingMax(int value, int* rollingMax, int range)
 		{
 			rollingMax[index]++;
 		}
-		for (int index = MAX_ANGLE + minRange; index < MAX_ANGLE; index++)
+		for (int index = maxAngle + minRange; index < maxAngle; index++)
 		{
 			rollingMax[index]++;
 		}
 	}
-	else if (maxRange > MAX_ANGLE)
+	else if (maxRange > maxAngle)
 	{
-		for (int index = minRange; index < MAX_ANGLE; index++)
+		for (int index = minRange; index < maxAngle; index++)
 		{
 			rollingMax[index]++;
 		}
-		for (int index = 0; index < maxRange - MAX_ANGLE; index++)
+		for (int index = 0; index < maxRange - maxAngle; index++)
 		{
 			rollingMax[index]++;
 		}
