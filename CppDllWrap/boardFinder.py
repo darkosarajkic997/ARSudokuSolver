@@ -152,12 +152,38 @@ def calculate_Hough_space_matrix(picture,width,height,rho,theta,hough_space_matr
     return function(picture,width,height,rho,theta,hough_space_matrix)
 
 def find_lines_above_voters_threshold(hough_space_matrix,rho_max,lines,number_of_voters, max_number_of_lines, theta_max=MAX_ANGLE):
+    """Finds lines that have number of voters greater than required
+
+    Args:
+        hough_space_matrix (numpy array, dtype=np.int32): Array that represents Hough space matrix
+        rho_max (integer): Maximum value of rho
+        lines (integer): Array of lines that satisfy condition, one line is represented with two adjacent elements in array where first one is theta in degrees and second one is rho
+        number_of_voters (integer): Minimum number of voters that line need to have to be selected
+        max_number_of_lines (integer): Maximum possible number of lines to be selected
+        theta_max (integer, optional): Maximum value for theta. Defaults to MAX_ANGLE.
+
+    Returns:
+        (integer): Number of lines that are selected
+    """
     function=board_finder_lib.findLinesAboveVotersThreshold
     function.argtypes=[np.ctypeslib.ndpointer(ctypes.c_int32),ctypes.c_int32,np.ctypeslib.ndpointer(ctypes.c_int32),ctypes.c_int32,ctypes.c_int32,ctypes.c_int32]
     function.restype = ctypes.c_int32
     return function(hough_space_matrix,rho_max,lines,number_of_voters, max_number_of_lines, theta_max)
 
 def hough_line_detector(picture,width, height, lines,votersThreshold=0.5,max_number_of_lines=MAX_LINES):
+    """Finds all lines on image that is preprocessed with edge detector using Hough transform
+
+    Args:
+        picture (numpy array, dtype=np.uint8): Array that contains pixel values of image, pixel values are 0 and 255
+        width (integer):  Width of image
+        height (integer): Height of image
+        lines (integer): Array of lines that have been found, one line is represented with two adjacent elements in array where first one is theta in degrees and second one is rho
+        votersThreshold (float, optional):  Percentage of maximum number of voters needed for line to be selected. Defaults to 0.5.
+        max_number_of_lines (integer, optional): Maximum possible number of lines to be selected. Defaults to MAX_LINES.
+
+    Returns:
+        (integer): Number of lines that are selected
+    """
     function=board_finder_lib.houghLineDetector
     function.argtypes=[np.ctypeslib.ndpointer(ctypes.c_uint8),ctypes.c_int32,ctypes.c_int32,np.ctypeslib.ndpointer(ctypes.c_int32),ctypes.c_float,ctypes.c_int32]
     function.restype = ctypes.c_int32
