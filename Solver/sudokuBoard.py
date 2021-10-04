@@ -3,7 +3,7 @@ import numpy as np
 
 
 class SudokuBoard:
-    # contructor uses string with 81 numbers[0-9] where empty field are coded as 0
+    # constructor uses string with 81 numbers[0-9] where empty field are coded as 0 when parameter input_type is set to 'string' else uses numpy array
     def __init__(self, board=const.TEST_BOARD, dim_x=const.BOARD_DIM_X, dim_y=const.BOARD_DIM_Y, input_type='string', cell_dim_x=const.CELL_DIM_X, cell_dim_y=const.CELL_DIM_Y):
         self.dim_x = dim_x
         self.dim_y = dim_y

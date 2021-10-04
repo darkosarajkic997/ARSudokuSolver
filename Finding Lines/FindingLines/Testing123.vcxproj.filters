@@ -18,5 +18,8 @@
     <ClCompile Include="Finding_Lines.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Hough.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
