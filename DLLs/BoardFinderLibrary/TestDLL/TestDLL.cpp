@@ -72,8 +72,8 @@ int main(int argc, char* argv[])
 	{
 		int imgRows, imgCols, numberOfHorisontalLines, numberOfVerticalLines;
 		int horisontalClusters, verticalClusters, rollingRange, peakWidth;
-		int numberOfLines, numberOfVoters, minNumberOfLines, maxNumberOfLines, votersStep;
-		int rho, theta;
+		int numberOfLines, minNumberOfLines, votersStep;
+		int theta;
 		int* horisontalLines = new int[int(MAX_LINES / 2)];
 		int* verticalLines = new int[int(MAX_LINES / 2)];
 		int* clusters, * lines;

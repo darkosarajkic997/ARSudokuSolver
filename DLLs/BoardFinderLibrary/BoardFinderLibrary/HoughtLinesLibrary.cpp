@@ -50,7 +50,6 @@ int calculateHoughSpaceMatrix(unsigned __int8* picture, int width, int height, i
 
 int findLinesAboveVotersThreshold(int* houghSpaceMatrix, int rhoMax, int* lines, int numberOfVoters, int maxNumberOfLines, int thetaMax)
 {
-
 	int lineIndex = 0;
 	for (int rho = 0; rho < 2 * rhoMax; rho++)
 		for (int theta = 0; theta < thetaMax; theta++)
