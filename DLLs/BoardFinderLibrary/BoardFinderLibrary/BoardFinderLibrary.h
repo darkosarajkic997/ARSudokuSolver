@@ -17,7 +17,9 @@
 /// <param name="range"> -> Range for which to increment rolling max [angle-range,angle+range]</param>
 /// <param name="maxAngle"> -> Maximum index of rollingMax </param>
 /// <returns></returns>
-extern "C" BOARDFINDERLIBRARY_API void addValueToRollingMax(int value, int* rollingMax, int range, int maxAngle = MAX_ANGLE);
+
+
+BOARDFINDERLIBRARY_API void addValueToRollingMax(int value, int* rollingMax, int range, int maxAngle = MAX_ANGLE);
 /// <summary>
 /// Finds max value in array on index range from minVal to maxVal
 /// </summary>

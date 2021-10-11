@@ -28,13 +28,11 @@ extern "C" RANSACHOMOGRAPHY_API void calculateDestinationPoints(Point * A, Point
 
 extern "C" RANSACHOMOGRAPHY_API Point convertPoint(Point orgPoint, Eigen::MatrixXf * homography);
 
-extern "C" RANSACHOMOGRAPHY_API bool RANSACHomography(Point * points, bool* validPoints, int numberOfPoints, Eigen::MatrixXf * homography, Point testPoint, float squareSize = 30, float inliersPercentage = 0.5, float tolerance = 0.05);
+extern "C" RANSACHOMOGRAPHY_API bool RANSACHomography(Point * points, bool* validPoints, int numberOfPoints, Eigen::MatrixXf * homography, Point testPoint, float squareSize = 50, float inliersPercentage = 0.65, float tolerance = 0.05);
 
-extern "C" RANSACHOMOGRAPHY_API bool calculateHomographyMatrix(Point A, Point B, Point C, Point D, Point * points, bool* validPoints, int numberOfPoints, float* homography, int* sizeX, int* sizeY, float squareSize = 30, float inliersPercentage = 0.5);
+extern "C" RANSACHOMOGRAPHY_API bool calculateHomographyMatrix(Point A, Point B, Point C, Point D, Point * points, bool* validPoints, int numberOfPoints, float* homography, int* sizeX, int* sizeY, float squareSize = 50, float inliersPercentage = 0.5);
 
-extern "C" RANSACHOMOGRAPHY_API bool findHomogrphyFromFourPoints(int indexA, int indexB, int indexC, int indexD, Point * points, bool* validPoints, int numberOfPoints, float* homographyMatrix, int* sizeX, int* sizeY, float squareSize = 30, float inliersPercentage = 0.5);
+extern "C" RANSACHOMOGRAPHY_API bool findHomogrphyFromFourPoints(int indexA, int indexB, int indexC, int indexD, Point * points, bool* validPoints, int numberOfPoints, float* homographyMatrix, int* sizeX, int* sizeY, float squareSize = 50, float inliersPercentage = 0.5);
 
-extern "C" RANSACHOMOGRAPHY_API
-
-extern "C" RANSACHOMOGRAPHY_API
+extern "C" RANSACHOMOGRAPHY_API bool findHomograpyFromTwoClustersOfLines(float* horizontalLines, int numberOfHorizontalLines, float* verticalLines, int numberOfVerticalLines, float* homographyMatrix, int squareEdgeSize = 50, float inliersPercentage = 0.5);
 

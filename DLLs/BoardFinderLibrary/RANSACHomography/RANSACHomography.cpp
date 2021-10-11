@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "RANSACHomography.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include "RANSACHomography.h"
 #include<Eigen/Dense>
 
 
@@ -16,18 +16,22 @@ bool checkIfDetIsZero(float det, float epsilon)
 bool findIntersectionOfTwoIntersectingLines(float rho1, float theta1, float rho2, float theta2, Point *point)
 {
 	float sinTheta1, sinTheta2, cosTheta1, cosTheta2, detA;
-	sinTheta1 = sin(theta1);
-	sinTheta2 = sin(theta2);
-	cosTheta1 = cos(theta1);
-	cosTheta2 = cos(theta2);
-	detA = cosTheta1 * sinTheta2 - sinTheta1 * cosTheta1;
-	if (checkIfDetIsZero(detA))
+	Eigen::Vector2f r,p;
+	Eigen::Matrix2f T;
+
+	sinTheta1 = sin(theta1 * M_PI / 180);
+	sinTheta2 = sin(theta2 * M_PI / 180);
+	cosTheta1 = cos(theta1 * M_PI / 180);
+	cosTheta2 = cos(theta2 * M_PI / 180);
+	r << rho1, rho2;
+	T << cos(theta1 * M_PI / 180), sin(theta1 * M_PI / 180), cos(theta2 * M_PI / 180), sin(theta2 * M_PI / 180);
+	if (T.determinant() < 0.000005)
 	{
 		return false;
 	}
-	point->x = (rho1 * sinTheta2 - rho2 * sinTheta1) / detA;
-	point->y = (-rho1 * cosTheta2 + rho2 * cosTheta1) / detA;
-
+	p = T.colPivHouseholderQr().solve(r);
+	point->x = p(0);
+	point->y = p(1);
 	return true;
 }
 
@@ -80,7 +84,7 @@ void fillEquationMatrix(Eigen::MatrixXf* matrix,Point AOrigin, Point ADestinatio
 	matrix->coeffRef(rowIndex + 1, 3) = -ADestination.x;
 	matrix->coeffRef(rowIndex + 1, 4) = -ADestination.y;
 	matrix->coeffRef(rowIndex + 1, 5) = -1;
-	matrix->coeffRef(rowIndex + 1, 6) = ADestination.x * AOrigin.x;
+	matrix->coeffRef(rowIndex + 1, 6) = ADestination.x * AOrigin.y;
 	matrix->coeffRef(rowIndex + 1, 7) = ADestination.y * AOrigin.y;
 	matrix->coeffRef(rowIndex + 1, 8) = AOrigin.y;
 }
@@ -89,8 +93,8 @@ void calculateDestinationPoints(Point* A, Point* B, Point* C, Point* D, int dist
 {
 	A->x = 0;
 	A->y = 0;
-	B->x = 0;
-	B->y = distanceX;
+	B->x = distanceX;
+	B->y = 0;
 	C->x = distanceX;
 	C->y = distanceY;
 	D->x = 0;
@@ -117,17 +121,18 @@ bool RANSACHomography(Point* points, bool* validPoints, int numberOfPoints, Eige
 	float distanceFromTestPointX, distanceFromTestPointY, distanceFromGridX, distanceFromGridY;
 	Point tmpPoint;
 	int minNumberOfInliers = int(numberOfPoints * inliersPercentage);
+	float margin = squareSize * tolerance;
 
 	for (int pointIndex = 0; pointIndex < numberOfPoints; pointIndex++)
 	{
 		if (validPoints[pointIndex])
 		{
 			tmpPoint = convertPoint(points[pointIndex], homography);
-			distanceFromTestPointX = abs(tmpPoint.x - testPoint.x) / squareSize;
-			distanceFromTestPointY = abs(tmpPoint.y - testPoint.y) / squareSize;
-			distanceFromGridX = abs(round(distanceFromTestPointX) - distanceFromTestPointX);
-			distanceFromGridY = abs(round(distanceFromTestPointY) - distanceFromTestPointY);
-			if ((distanceFromGridX < distanceFromTestPointX * tolerance) && (distanceFromGridY < distanceFromTestPointY * tolerance))
+			distanceFromTestPointX = abs(tmpPoint.x - testPoint.x);
+			distanceFromTestPointY = abs(tmpPoint.y - testPoint.y);
+			distanceFromGridX = abs(distanceFromTestPointX - squareSize * (round(distanceFromTestPointX / squareSize)));
+			distanceFromGridY = abs(distanceFromTestPointY - squareSize * (round(distanceFromTestPointY / squareSize)));
+			if ((distanceFromGridX <= margin) && (distanceFromGridY <= margin) && (distanceFromTestPointX<=9*squareSize+margin) && (distanceFromTestPointY <= 9 * squareSize + margin))
 			{
 				inliers++;
 				if (inliers > minNumberOfInliers)
@@ -145,23 +150,33 @@ bool RANSACHomography(Point* points, bool* validPoints, int numberOfPoints, Eige
 	return false;
 }
 
-bool calculateHomographyMatrix(Point A, Point B, Point C, Point D, Point* points, bool* validPoints, int numberOfPoints, float* homography, int* sizeX, int* sizeY, float squareSize = 30, float inliersPercentage = 0.5)
+void convertFromEigenToArray(Eigen::MatrixXf* eigenHomography, float* homography)
+{
+	for (int row = 0; row < 3; row++)
+	{
+		for (int column = 0; column < 3; column++)
+		{
+			homography[row * 3 + column] = eigenHomography->coeffRef(row, column);
+		}
+	}
+}
+
+bool calculateHomographyMatrix(Point A, Point B, Point C, Point D, Point* points, bool* validPoints, int numberOfPoints, float* homography, int* sizeX, int* sizeY, float squareSize, float inliersPercentage)
 {
 	Point ADest, BDest, CDest, DDest;
 	Eigen::MatrixXf P= Eigen::MatrixXf::Zero(9,9);
 	Eigen::VectorXf b= Eigen::VectorXf::Zero(9);
 	Eigen::VectorXf homographyVector;
 	Eigen::MatrixXf homographyMatrix;
-	bool homographyFound=false;
 	int distanceX, distanceY;
 
 	P(8, 8) = 1;
 	b(8) = 1;
 
-	for (int indexX = 1; indexX < 10; indexX++)
+	for (int indexX = 9; indexX > 0; indexX--)
 	{
 		distanceX = indexX * squareSize;
-		for (int indexY = 1; indexY < 10; indexY++)
+		for (int indexY = 9; indexY > 0; indexY--)
 		{
 			distanceY = indexY * squareSize;
 			calculateDestinationPoints(&ADest, &BDest, &CDest, &DDest, distanceX, distanceY);
@@ -169,21 +184,19 @@ bool calculateHomographyMatrix(Point A, Point B, Point C, Point D, Point* points
 			fillEquationMatrix(&P, B, BDest, 2);
 			fillEquationMatrix(&P, C, CDest, 4);
 			fillEquationMatrix(&P, D, DDest, 6);
-			homographyVector = P.colPivHouseholderQr().solve(b);
+			homographyVector = P.inverse() * b;
 			homographyMatrix = homographyVector.reshaped(3, 3).transpose();
-			if (RANSACHomography(points, validPoints, numberOfPoints, &homographyMatrix, A, squareSize, inliersPercentage))
+			if (RANSACHomography(points, validPoints, numberOfPoints, &homographyMatrix, DDest, squareSize, inliersPercentage))
 			{
-
+				convertFromEigenToArray(&homographyMatrix, homography);
+				return true;
 			}
 
 		}
 	}
-
-
-
 	return false;
 }
-bool findHomogrphyFromFourPoints(int indexA, int indexB, int indexC, int indexD, Point* points, bool* validPoints, int numberOfPoints, float* homographyMatrix,int *sizeX, int *sizeY, float squareSize=30, float inliersPercentage = 0.5)
+bool findHomogrphyFromFourPoints(int indexA, int indexB, int indexC, int indexD, Point* points, bool* validPoints, int numberOfPoints, float* homographyMatrix,int *sizeX, int *sizeY, float squareSize, float inliersPercentage)
 {
 	Point A, B, C, D;
 	if (validPoints[indexA] && validPoints[indexB] && validPoints[indexC] && validPoints[indexD])
@@ -202,7 +215,7 @@ bool findHomogrphyFromFourPoints(int indexA, int indexB, int indexC, int indexD,
 }
 
 
-bool findHomograpyFromTwoClustersOfLines(float* horizontalLines, int numberOfHorizontalLines, float* verticalLines, int numberOfVerticalLines, float* homographyMatrix, float inliersPercentage=0.5)
+bool findHomograpyFromTwoClustersOfLines(float* horizontalLines, int numberOfHorizontalLines, float* verticalLines, int numberOfVerticalLines, float* homographyMatrix, int squareEdgeSize, float inliersPercentage)
 {
 	int ACModDelta, numberOfInliers, sizeX, sizeY;
 	bool possibleHomography;
@@ -210,7 +223,6 @@ bool findHomograpyFromTwoClustersOfLines(float* horizontalLines, int numberOfHor
 	int numberOfIntersections = numberOfHorizontalLines * numberOfVerticalLines;
 	Point* intersectionPoints = new Point[numberOfIntersections];
 	bool* validIntersections = new bool[numberOfIntersections];
-	int squareEdgeSize = 50;
 
 	findAllIntersectionPoints(horizontalLines, numberOfHorizontalLines, verticalLines, numberOfVerticalLines, intersectionPoints, validIntersections);
 
