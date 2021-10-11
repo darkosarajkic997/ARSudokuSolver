@@ -1,5 +1,6 @@
 # ARSudokuSolver
-- Augmented reality sudoku solver written in Python and C++
+- Augmented reality sudoku solver written in Python and C++ <br /><br />
+![Alt Text](https://github.com/darkosarajkic997/ARSudokuSolver/blob/master/sudoku.gif)
 
 ## Installation
 - Install required python libraries from requirements.txt using pip install -r requirements.txt
