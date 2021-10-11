@@ -1,6 +1,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include"BoardFinderLibrary.h"
+#include"RANSACHomography.h"
 
 
 void drawLinesOnImageAndDisplay(int* lines, int numberOfLines, cv::Mat_<unsigned __int8> image, int colorRGB = 255, bool display = true)
@@ -62,9 +63,26 @@ void drawLinesOnImageAndDisplayF(float* lines, int numberOfLines, cv::Mat_<unsig
 		cv::imshow("Lines", image);
 		cv::waitKey(0);
 		cv::destroyAllWindows();
+		
 	}
 }
 
+void drawPointsAndDispaly(Point* points, int numberOfPoints, cv::Mat_<unsigned __int8>  image, int colorRGB = 255, bool display = true)
+{
+	for (int index = 0; index < numberOfPoints; index++)
+	{
+		cv::circle(image, cv::Point(points[index].x, points[index].y), 3, cv::Scalar(colorRGB), -1);
+	}
+	if (display)
+	{
+		cv::imwrite("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Images\\Lines.jpg", image);
+		cv::namedWindow("Points", cv::WINDOW_AUTOSIZE);
+		cv::imshow("Points", image);
+		cv::waitKey(0);
+		cv::destroyAllWindows();
+
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -77,8 +95,9 @@ int main(int argc, char* argv[])
 		int* horisontalLines = new int[int(MAX_LINES / 2)];
 		int* verticalLines = new int[int(MAX_LINES / 2)];
 		int* clusters, * lines;
-		float* clusteredLines;
+		float* verticalClusteredLines, *horizontalClusteredLines;
 		float votersThreshold;
+		float homographyMatrix[9];
 
 		std::string imagePath = argv[1];
 		cv::Mat_<unsigned __int8> image = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
@@ -89,7 +108,7 @@ int main(int argc, char* argv[])
 
 
 		cv::Mat_<unsigned __int8> imageCanny;
-		cv::Canny(image, imageCanny, 140, 200);
+		cv::Canny(image, imageCanny, 120, 160);
 
 
 
@@ -102,7 +121,7 @@ int main(int argc, char* argv[])
 			}
 
 		lines = new int[MAX_LINES * 2];
-		votersThreshold = 0.5;
+		votersThreshold = 0.55;
 		numberOfLines = houghLineDetector(picture, imgCols, imgRows, lines, votersThreshold);
 
 		drawLinesOnImageAndDisplay(lines, numberOfLines, imageCanny, 100);
@@ -112,26 +131,37 @@ int main(int argc, char* argv[])
 		findTwoBiggestClustersOfLines(lines, numberOfLines, rollingRange, peakWidth, MAX_LINES, horisontalLines, verticalLines, &numberOfHorisontalLines, &numberOfVerticalLines);
 
 		clusters = new int[int(MAX_LINES / 2)]{ 0 };
-		horisontalClusters = linesDBSCAN(horisontalLines, numberOfHorisontalLines, clusters);
-		clusteredLines = new float[2 * horisontalClusters];
-		findAverageForClusteredLines(horisontalLines, numberOfHorisontalLines, clusters, horisontalClusters, clusteredLines);
-		drawLinesOnImageAndDisplayF(clusteredLines, horisontalClusters, image, 100, false);
+		horisontalClusters = linesDBSCAN(horisontalLines, numberOfHorisontalLines, clusters,1);
+		horizontalClusteredLines = new float[2 * horisontalClusters];
+		findAverageForClusteredLines(horisontalLines, numberOfHorisontalLines, clusters, horisontalClusters, horizontalClusteredLines);
+		drawLinesOnImageAndDisplayF(horizontalClusteredLines, horisontalClusters, image, 100, false);
 		delete[] clusters;
-		delete[] clusteredLines;
 
 		clusters = new int[int(MAX_LINES / 2)]{ 0 };
 		verticalClusters = linesDBSCAN(verticalLines, numberOfVerticalLines, clusters);
-		clusteredLines = new float[2 * verticalClusters];
-		findAverageForClusteredLines(verticalLines, numberOfVerticalLines, clusters, verticalClusters, clusteredLines);
-		drawLinesOnImageAndDisplayF(clusteredLines, verticalClusters, image, 100);
-
+		verticalClusteredLines = new float[2 * verticalClusters];
+		findAverageForClusteredLines(verticalLines, numberOfVerticalLines, clusters, verticalClusters, verticalClusteredLines);
+		drawLinesOnImageAndDisplayF(verticalClusteredLines, verticalClusters, image, 100);
 
 		delete[] lines;
 		delete[] horisontalLines;
 		delete[] verticalLines;
-		delete[] clusteredLines;
 		delete[] clusters;
 		delete[] picture;
+
+		Point *points=new Point[horisontalClusters*verticalClusters];
+		bool *valid=new bool[horisontalClusters * verticalClusters];
+
+		findAllIntersectionPoints(horizontalClusteredLines, horisontalClusters, verticalClusteredLines, verticalClusters, points, valid);
+		drawPointsAndDispaly(points, horisontalClusters * verticalClusters,image);
+		
+		findHomograpyFromTwoClustersOfLines(horizontalClusteredLines, horisontalClusters, verticalClusteredLines, verticalClusters, homographyMatrix);
+
+
+		delete[] points;
+		delete[] valid;
+		delete[] horizontalClusteredLines;
+		delete[] verticalClusteredLines;
 	}
 
 }
