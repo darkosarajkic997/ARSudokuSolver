@@ -6,6 +6,7 @@ import numpy as np
 from tensorflow import keras
 from Solver.sudokuBoard import SudokuBoard
 import time
+import configparser
 
 
 CELL_DIM=50
@@ -177,12 +178,12 @@ def check_border(image, threshold=0.2, border_width=5):
         return False
 
 
-MODEL="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\OCR\\ocr_model_v1_gen"
-IMAGE="F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Images\\sudoku_from_video.jpg"
-
 if __name__ == "__main__":
-    model = keras.models.load_model(MODEL)
-    image = cv2.imread(IMAGE)
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    model = keras.models.load_model(config['Resources']['model'])
+    image = cv2.imread(config['Resources']['image'])
  
 
     image_area=image.shape[0]*image.shape[1]

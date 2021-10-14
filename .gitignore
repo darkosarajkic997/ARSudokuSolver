@@ -137,10 +137,7 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-#Custom
-Data/
-
-####C++
+#---------------  C++ -------------
 
 # Prerequisites
 *.d
@@ -563,3 +560,7 @@ FodyWeavers.xsd
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+#---------- Custom ------------
+Data/
+*.ini
