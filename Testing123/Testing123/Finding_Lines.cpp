@@ -86,18 +86,19 @@ std::vector<int> Filtering(std::vector<int> rhoThetaBeforeClipping,int rhoDiffer
 {
 	int numberOfSimilarLines = 1;
 	std::vector<int> outputArray;
-	for (int i = 0; i < rhoThetaBeforeClipping.size()-3; i += 2)
+	for (int i = 0; i < rhoThetaBeforeClipping.size() - 3; i += 2)
 	{
-		if ((rhoThetaBeforeClipping[i + 2] - rhoThetaBeforeClipping[i] < rhoDifference ) && (abs(rhoThetaBeforeClipping[i+3]-rhoThetaBeforeClipping[i+1])<thetaDifference))
+		if ((rhoThetaBeforeClipping[i + 2] - rhoThetaBeforeClipping[i] < rhoDifference) && (abs(rhoThetaBeforeClipping[i + 3] - rhoThetaBeforeClipping[i + 1]) < thetaDifference))
 			numberOfSimilarLines++;
 		else
 		{
 			int index = TakeTheMiddleLineIndex(i, numberOfSimilarLines);
 			outputArray.push_back(rhoThetaBeforeClipping[index]);
-			outputArray.push_back(rhoThetaBeforeClipping[index+1]);
+			outputArray.push_back(rhoThetaBeforeClipping[index + 1]);
 			numberOfSimilarLines = 1;
 		}
 	}
+
 	rhoThetaBeforeClipping.clear();
 	return outputArray;
 }
@@ -114,7 +115,7 @@ std::vector<int> doPicture(unsigned __int8* picture, int width, int height)
 	int matrixMaximum=CalculatingMatrixMaximum(rho, theta, houghSpaceMatrix);
 
 	//int SIZE = 1000;
-	std::vector<int> rhoThetaBeforeClipping=FindingLocalMaximums(rho, theta, houghSpaceMatrix,matrixMaximum);
+	std::vector<int> rhoThetaBeforeClipping=FindingLocalMaximums(rho, theta, houghSpaceMatrix,matrixMaximum,0.3);
 
 	delete[] houghSpaceMatrix;
 	
@@ -270,9 +271,9 @@ Mat to_Mat(Point2f p)
 	P.at<float>(2, 0) = 1;
 	return P;
 }
-int BelongsToGrid(Mat X_warped,Mat P1_warped,float x_distance,float tolerance,float belongs_to_picture_tolerance=5)
+int BelongsToGrid(Mat X_warped,Mat P1_warped,float x_distance,float tolerance,float belongs_to_picture_tolerance=5,float margin=6)
 {
-	if ((X_warped.at<float>(0, 0) > (9 * x_distance + belongs_to_picture_tolerance)) && (X_warped.at<float>(1, 0) > (9 * x_distance + belongs_to_picture_tolerance)))
+	if ((X_warped.at<float>(0, 0) > (9 * x_distance + belongs_to_picture_tolerance+margin)) && (X_warped.at<float>(1, 0) > (9 * x_distance + belongs_to_picture_tolerance+margin)))
 		return -1;
 	if ((X_warped.at<float>(0, 0) > -belongs_to_picture_tolerance) && (X_warped.at<float>(1, 0) > -belongs_to_picture_tolerance))
 	{
@@ -288,7 +289,7 @@ int BelongsToGrid(Mat X_warped,Mat P1_warped,float x_distance,float tolerance,fl
 	}
 	return -1;
 }
-int CheckMissingEdge1(Mat imageCannied, float x_distance, float left_most_x, float right_most_x, int tolerance = 5)
+int CheckMissingVerticalEdges(Mat imageCannied, float x_distance, float left_most_x, float right_most_x, int tolerance = 5)
 {
 	float leftEdge = left_most_x - x_distance;
 	float rightEdge = right_most_x + x_distance;
@@ -306,9 +307,11 @@ int CheckMissingEdge1(Mat imageCannied, float x_distance, float left_most_x, flo
 		return 1;
 	else return -1;
 }
-int CheckMissingEdge2(Mat imageCannied, float x_distance, float upper_most_y, float lower_most_y, int tolerance = 5)
+int CheckMissingHorizontalEdges(Mat imageCannied, float x_distance, float upper_most_y, float lower_most_y, int tolerance = 5)
 {
 	float upEdge = upper_most_y - x_distance;
+	/*if (upEdge < 0)
+		upEdge += 5;*/
 	float downEdge = lower_most_y + x_distance;
 	int upVotes = 0;
 	int downVotes = 0;
@@ -372,11 +375,11 @@ Mat MoveBoard(std::vector<Point2f> array1, Mat H, float x_distance,int* gridPosA
 
 	float k = lower_most_y / x_distance;
 	int lowest_y = round(k);
-	int goingDown = 8 - lowest_y;
+	int goingDown = 9 - lowest_y;
 
 	k = right_most_x / x_distance;
 	int rightest_x = round(k);
-	int goingRight = 8 - rightest_x;
+	int goingRight = 9 - rightest_x;
 
 	Point2f p5(x_distance * gridPosArray[2] + goingRight * x_distance, x_distance * gridPosArray[3] + goingDown * x_distance);
 	Point2f p6(x_distance * gridPosArray[2] + furthest_x_distance + goingRight * x_distance, x_distance * gridPosArray[3] + goingDown * x_distance);
@@ -391,18 +394,47 @@ Mat MoveBoard(std::vector<Point2f> array1, Mat H, float x_distance,int* gridPosA
 	Mat homography = CalculateHomography(array1, array2);
 	return homography;
 }
-
-Mat AdjustingHomography(Mat image, Mat H, vector<int> arrayHor, vector<int> arrayVer, int x_distance,int scale,int* gridPosArray)
+std::vector<float> Lowest_X_Biggest_X (Mat P1, Mat P2, Mat imageCannied, float x_distance, std::vector<float> edgeArray)
 {
+	float left_most_x = P1.at<float>(0, 0);
+	float right_most_x = P2.at<float>(0, 0);
+	float furthest_x_distance = right_most_x - left_most_x;
+	int numOfVerLinesMinusOne = round(furthest_x_distance / x_distance);
 
-	std::vector<Point2f> array1=IntersectionPoints(arrayHor, arrayVer);
+	while (numOfVerLinesMinusOne < 9)
+	{
+		int direction = CheckMissingVerticalEdges(imageCannied, x_distance, left_most_x, right_most_x);
+		if (direction == -1)
+			left_most_x = left_most_x - x_distance;
+		else right_most_x = right_most_x + x_distance;
+		numOfVerLinesMinusOne++;
+	}
+	edgeArray.push_back(left_most_x);
+	edgeArray.push_back(right_most_x);
 
-	Mat movedHomography=MoveBoard(array1, H, x_distance, gridPosArray);
+	return edgeArray;
+}
+std::vector<float> Lowest_Y_Biggest_Y(Mat P1, Mat P2, Mat imageCannied, float x_distance, std::vector<float> edgeArray)
+{
+	float upper_most_y = P1.at<float>(1, 0);
+	float lower_most_y = P2.at<float>(1, 0);
+	float furthest_y_distance = lower_most_y - upper_most_y;
+	int numOfHorLinesMinusOne = round(furthest_y_distance / x_distance);
 
-	Mat warpedImage;
-	Size sz(1300, 900);
-	cv::warpPerspective(image, warpedImage, movedHomography, sz);
-
+	while (numOfHorLinesMinusOne < 9)
+	{
+		int direction = CheckMissingHorizontalEdges(imageCannied, x_distance, upper_most_y, lower_most_y);
+		if (direction == -1)
+			upper_most_y = upper_most_y - x_distance;
+		else lower_most_y = lower_most_y + x_distance;
+		numOfHorLinesMinusOne++;
+	}
+	edgeArray.push_back(upper_most_y);
+	edgeArray.push_back(lower_most_y);
+	return edgeArray;
+}
+std::vector<Point2f> FindSudokuBoardCorners(Mat warpedImage, Mat movedHomography, std::vector<Point2f> array1, float x_distance)
+{
 	Mat P1 = to_Mat(array1[0]);
 	Mat P2 = to_Mat(array1[1]);
 	Mat P3 = to_Mat(array1[2]);
@@ -410,53 +442,55 @@ Mat AdjustingHomography(Mat image, Mat H, vector<int> arrayHor, vector<int> arra
 	Mat new_P2_warped = movedHomography * P2;
 	Mat new_P3_warped = movedHomography * P3;
 
-	float left_most_x = new_P1_warped.at<float>(0, 0);
-	float right_most_x = new_P2_warped.at<float>(0, 0);
-	float furthest_x_distance = right_most_x - left_most_x;
-	int numOfVerLinesMinusOne = round(furthest_x_distance / x_distance);
-
 	Mat imageSobeled;
 	Mat imageCannied;
 	cv::Sobel(warpedImage, imageSobeled, CV_8UC1, 1, 0);
 	cv::Canny(imageSobeled, imageCannied, 175, 200);
+	
+	std::vector<float> edge_array;
+	edge_array=Lowest_X_Biggest_X(new_P1_warped, new_P2_warped, imageCannied, x_distance, edge_array);
+	edge_array=Lowest_Y_Biggest_Y(new_P2_warped, new_P3_warped, imageCannied, x_distance, edge_array);
+	
+	std::vector<Point2f> corners;
+	corners.push_back(Point2f(edge_array[0], edge_array[2]));
+	corners.push_back(Point2f(edge_array[1], edge_array[2]));
+	corners.push_back(Point2f(edge_array[1], edge_array[3]));
+	corners.push_back(Point2f(edge_array[0], edge_array[3]));
 
-	while (numOfVerLinesMinusOne < 9)
-	{
-		int direction = CheckMissingEdge1(imageCannied, x_distance, left_most_x, right_most_x);
-		if (direction == -1)
-			left_most_x = left_most_x - x_distance;
-		else right_most_x = right_most_x + x_distance;
-		numOfVerLinesMinusOne++;
-	}
 
-	float upper_most_y = new_P2_warped.at<float>(1, 0);
-	float lower_most_y = new_P3_warped.at<float>(1, 0);
-	float furthest_y_distance = lower_most_y - upper_most_y;
-	int numOfHorLinesMinusOne = round(furthest_y_distance / x_distance);
-
-	while (numOfHorLinesMinusOne < 9)
-	{
-		int direction = CheckMissingEdge2(imageCannied, x_distance, upper_most_y, lower_most_y);
-		if (direction == -1)
-			upper_most_y = upper_most_y - x_distance;
-		else lower_most_y = lower_most_y + x_distance;
-		numOfHorLinesMinusOne++;
-	}
-	return movedHomography;
+	return corners;
 }
-Mat FindingHomography(Mat image,std::vector<int> arrayHor,std::vector<int> arrayVer,int scale=100, float tolerance = 0.1)
+Mat AdjustingHomography(Mat image, Mat H, vector<int> arrayHor, vector<int> arrayVer, float x_distance,int scale,int* gridPosArray)
+{
+
+	std::vector<Point2f> array1=IntersectionPoints(arrayHor, arrayVer);
+
+	Mat movedHomography=MoveBoard(array1, H, x_distance, gridPosArray);
+
+	Mat warpedImage;
+	Size sz(1300, 1100);
+	cv::warpPerspective(image, warpedImage, movedHomography, sz);
+
+	std::vector<Point2f> sudokuCorners=FindSudokuBoardCorners(warpedImage, movedHomography, array1, x_distance);
+
+	return movedHomography;
+
+}
+Mat FindingHomography(Mat image,std::vector<int> arrayHor,std::vector<int> arrayVer,int scale=100, float tolerance = 0.03)
 {
 	std::vector<Point2f> vec = CalculateIntersections(arrayHor, arrayVer);
 	int maxNumOfInliers = 0;
 	Mat resultHomography(3, 3, CV_32F);
-	int currHomography = 1;
-	int bestHomography = 1;
 	float x_distance = scale;
-	bool p = true;
-	int numOfTries = 0;
-	int timesEntered = 0;
+	bool NOT_FOUND = true;
 	int gridPosArray[4];
-		while (p)
+
+	//int currHomography = 1;
+	//int bestHomography = 1;
+	//int numOfTries = 0;
+	//int timesEntered = 0;
+
+		while (NOT_FOUND)
 		{
 			int line1_index = rand() % ((arrayHor.size()/2)-1);
 			int line2_index = rand() % ((arrayHor.size()/2)-1);
@@ -489,21 +523,22 @@ Mat FindingHomography(Mat image,std::vector<int> arrayHor,std::vector<int> array
 			Point2f p2 = CalculatePoint(line1_rho, line1_theta, line4_rho, line4_theta);
 			Point2f p3 = CalculatePoint(line2_rho, line2_theta, line4_rho, line4_theta);
 			Point2f p4 = CalculatePoint(line2_rho, line2_theta, line3_rho, line3_theta);
-			printf("%f %f \n", p1.x, p1.y);
+			/*printf("%f %f \n", p1.x, p1.y);
 			printf("%f %f \n", p2.x, p2.y);
 			printf("%f %f \n", p3.x, p3.y);
 			printf("%f %f \n", p4.x, p4.y);
-			printf("\n");
+			printf("\n");*/
 			for (int sx = 1; sx < 10; sx++)
 				for (int sy = 1; sy < 10; sy++)
 					for (int swx=0;swx<10-sx;swx+=1)
  						for (int swy=0;swy<10-sy;swy+=1)
-							if (p)
+							if (NOT_FOUND)
 							{
-								Point2f p5(scale * swx, scale * swy);
-								Point2f p6(scale * swx + scale * sx, scale * swy);
-								Point2f p7(scale * swx + scale * sx, scale * swy + scale * sy);
-								Point2f p8(scale * swx, scale * swy + scale * sy);
+								int margin = 6;
+								Point2f p5(scale * swx+margin, scale * swy+margin);
+								Point2f p6(scale * swx + scale * sx+margin, scale * swy+margin);
+								Point2f p7(scale * swx + scale * sx+margin, scale * swy + scale * sy+margin);
+								Point2f p8(scale * swx+margin, scale * swy + scale * sy+margin);
 								std::vector<Point2f> array1;
 								std::vector<Point2f> array2;
 
@@ -530,16 +565,16 @@ Mat FindingHomography(Mat image,std::vector<int> arrayHor,std::vector<int> array
 
 
 								x_distance = (P2_warped.at<float>(0, 0) - P1_warped.at<float>(0, 0)) / (float)sx;
-
+								//mozda bi trebalo da se racuna i y_distance
 								float p2_to_p3_distance = line2_rho - line1_rho;
 								float p1_to_p2_distance = line4_rho - line3_rho;
 
 								float ratio1 = p1_to_p2_distance / p2_to_p3_distance;
 								float ratio2 = (float)sx / (float)sy;
 	
-								if (abs(ratio1 - ratio2) < 0.4)
-								{
-									timesEntered++;
+								//if (abs(ratio1 - ratio2) < 0.4)
+								//{
+									//timesEntered++;
 									int numOfInliers = 0;
 									int i = 0;
 									for (std::vector<Point2f>::iterator it = vec.begin(); it != vec.end(); ++it)
@@ -559,7 +594,7 @@ Mat FindingHomography(Mat image,std::vector<int> arrayHor,std::vector<int> array
 											it = vec.end() - 1;
 										}
 									}
-									printf("\n");
+									//printf("\n");
 									if (numOfInliers > maxNumOfInliers)
 									{
 										bool q = false;
@@ -577,8 +612,8 @@ Mat FindingHomography(Mat image,std::vector<int> arrayHor,std::vector<int> array
 											gridPosArray[3] = swy;
 											resultHomography = homography;
 											maxNumOfInliers = numOfInliers;
-											bestHomography = currHomography;
-											printf("%f %f ", p1.x, p1.y);
+											//bestHomography = currHomography;
+											/*printf("%f %f ", p1.x, p1.y);
 											printf("\n");
 											printf("%f %f ", p2.x, p2.y);
 											printf("\n");
@@ -588,26 +623,42 @@ Mat FindingHomography(Mat image,std::vector<int> arrayHor,std::vector<int> array
 											printf("\n");
 											printf("%d %d\n", line1_index, line2_index);
 											printf("%d %d \n", line3_index, line4_index);
-											printf("swx=%d swy=%d sx=%d sy=%d \n", swx, swy, sx, sy);
+											printf("swx=%d swy=%d sx=%d sy=%d \n", swx, swy, sx, sy);*/
 											/*for (int row = 0; row < 3; row++)
 											{
 												for (int col = 0; col < 3; col++)
 													printf("%f ", resultHomography.at<float>(row, col));
 												printf("\n");
 											}*/
-											//if (maxNumOfInliers > (arrayHor.size()/2) * (arrayVer.size() / 2)/2 )
-											  if (maxNumOfInliers > 11)
+											if (maxNumOfInliers > 25 )//it has to be greater than hor*ver/4 because of 2x1 and 2x2
 											{
-												p = false;
-												printf("\n");
+												NOT_FOUND = false;
+												for (std::vector<Point2f>::iterator it = vec.begin(); it != vec.end(); ++it)
+												{
+													Mat X(3, 1, CV_32F);
+													X.at<float>(0, 0) = (*it).x;
+													X.at<float>(1, 0) = (*it).y;
+													X.at<float>(2, 0) = 1;
+													Mat X_warped = homography * X;
+
+													int a = BelongsToGrid(X_warped, P1_warped, x_distance, tolerance);
+													if (a == 1)
+														numOfInliers++;
+													else if (a == -1)
+													{
+														numOfInliers = 0;
+														it = vec.end() - 1;
+													}
+												}
+												//printf("\n");
 											}
 										}
 									}
-								}
-								currHomography++;
+								//}
+								//currHomography++;
 								
 							}
-			numOfTries++;
+			//numOfTries++;
 		}
 		 
 		Mat newHomography = AdjustingHomography(image, resultHomography, arrayHor, arrayVer, x_distance,scale,gridPosArray);
@@ -619,10 +670,10 @@ Mat FindingHomography(Mat image,std::vector<int> arrayHor,std::vector<int> array
 int main(int argc, char** argv)
 {
 
-	int rows = 864;
-	int cols = 1300;
+	int rows = 615;
+	int cols = 620;
 
-	String s = "sudoku.jpg";
+	String s = "sudoku2.jpg";
 	Mat_<unsigned __int8> image = imread(s, IMREAD_GRAYSCALE);
 	Mat_<unsigned __int8> imageCanny;
 	Mat_<unsigned __int8> outputImage;
@@ -641,16 +692,18 @@ int main(int argc, char** argv)
 	//DrawLines(imageCanny, outputArrayWithoutFiltering);
 	cv::imshow("CannyBeforeFiltering", imageCanny);
 	std::vector<int> outputArrayWithFiltering= Filtering(outputArrayWithoutFiltering,20,5);
-	std::vector<int> arrayHor;
+	//DrawLines(imageCanny, outputArrayWithFiltering);
 	std::vector<int> arrayVer;
+	std::vector<int> arrayHor;
+	int theta_for_distinction = outputArrayWithFiltering[1];
 	for (std::vector<int>::iterator it = outputArrayWithFiltering.begin(); it != outputArrayWithFiltering.end();)
 	{
-		if ((*(it+1) > 12) && (*(it + 1) < 25))
+		if ((*(it+1) > -1) && (*(it+1) <5))//(12,25)
 		{
 			arrayVer.push_back(*it);
 			arrayVer.push_back(*(it + 1));
 		}
-		if ((*(it + 1) > 280) && (*(it + 1) < 285))
+		else if ((*(it+1)>269) && (*(it+1)<275))
 		{
 			arrayHor.push_back(*it);
 			arrayHor.push_back(*(it + 1));
@@ -669,11 +722,12 @@ int main(int argc, char** argv)
 		arrayHor.push_back(rho);
 		arrayHor.push_back(theta);
 	}*/
-	std::vector<int> arrayHorFiltered = Filtering(arrayHor, 20, 5);
+	std::vector<int> arrayHorFiltered = Filtering(arrayHor, 20, 5);//Filtering func needs repairing
 	std::vector<int> arrayVerFiltered = Filtering(arrayVer, 20, 5);
 	DrawLines(imageCanny, arrayHorFiltered);
 	DrawLines(imageCanny, arrayVerFiltered);
 	imshow("Output2", imageCanny);
+	waitKey(0);
 	Mat H(3,3,CV_32F);
 	H=FindingHomography(imageCanny, arrayHorFiltered, arrayVerFiltered,60);
 	//AdjustingHomography(imageCanny,arrayHorFiltered,arrayVerFiltered)
@@ -681,7 +735,7 @@ int main(int argc, char** argv)
 	Mat_<unsigned __int8> imageCannied;
 
 	//imshow("Sobel", imageSobeled);
-	Size sz(1300, 900);
+	Size sz(1300, 900);//Da li mogu da podesim velicinu slike u funkciji koliko hocu pa posle da je smanjim kad vratim nazad???
 	cv::warpPerspective(image, outputImage, H,sz);
 	//cv::Sobel(outputImage, imageSobeled, CV_8UC1, 1, 0);
 	//cv::Canny(outputImage,imageCannied,200,200);
