@@ -56,8 +56,6 @@ int CheckMissingVerticalEdges(Mat imageCannied, float x_distance, float left_mos
 int CheckMissingHorizontalEdges(Mat imageCannied, float x_distance, float upper_most_y, float lower_most_y, int tolerance = 5)
 {
 	float upEdge = upper_most_y - x_distance;
-	/*if (upEdge < 0)
-		upEdge += 5;*/
 	float downEdge = lower_most_y + x_distance;
 	int upVotes = 0;
 	int downVotes = 0;
@@ -214,7 +212,8 @@ Mat AdjustingHomography(Mat image, Mat H, vector<int> arrayHor, vector<int> arra
 	Mat movedHomography=MoveBoard(array1, H, x_distance, gridPosArray);
 
 	Mat warpedImage;
-	Size sz(1300, 1100);
+
+	Size sz(18*x_distance,18*x_distance);
 	cv::warpPerspective(image, warpedImage, movedHomography, sz);
 
 	std::vector<Point2f> sudokuCorners=FindSudokuBoardCorners(warpedImage, movedHomography, array1, x_distance);
@@ -225,11 +224,11 @@ Mat AdjustingHomography(Mat image, Mat H, vector<int> arrayHor, vector<int> arra
 Mat FindingHomographyFunc(Mat image,std::vector<int> arrayHor,std::vector<int> arrayVer,int scale=100, float tolerance = 0.05)
 {
 	std::vector<Point2f> intersection_points_vector = CalculateIntersections(arrayHor, arrayVer);
-	int maxNumOfInliers = 0;
-	Mat resultHomography(3, 3, CV_32F);
+	int max_num_of_inliers = 0;
+	Mat result_homography(3, 3, CV_32F);
 	float x_distance = scale;
 	bool NOT_FOUND = true;
-	int gridPosArray[4];
+	int grid_pos_array[4];
 
 	//int currHomography = 1;
 	//int bestHomography = 1;
@@ -284,20 +283,20 @@ Mat FindingHomographyFunc(Mat image,std::vector<int> arrayHor,std::vector<int> a
 								Point2f p6(scale * swx + scale * sx, scale * swy);
 								Point2f p7(scale * swx + scale * sx, scale * swy + scale * sy);
 								Point2f p8(scale * swx, scale * swy + scale * sy);
-								std::vector<Point2f> array1;
-								std::vector<Point2f> array2;
+								std::vector<Point2f> src_pic_array;
+								std::vector<Point2f> dst_pic_array;
 
-								array1.push_back(p1);
-								array1.push_back(p2);
-								array1.push_back(p3);
-								array1.push_back(p4);
+								src_pic_array.push_back(p1);
+								src_pic_array.push_back(p2);
+								src_pic_array.push_back(p3);
+								src_pic_array.push_back(p4);
 
-								array2.push_back(p5);
-								array2.push_back(p6);
-								array2.push_back(p7);
-								array2.push_back(p8);
+								dst_pic_array.push_back(p5);
+								dst_pic_array.push_back(p6);
+								dst_pic_array.push_back(p7);
+								dst_pic_array.push_back(p8);
 
-								Mat homography = CalculateHomography(array1, array2);//ili tu...
+								Mat homography = CalculateHomography(src_pic_array, dst_pic_array);//ili tu...
 
 								Mat P1 = to_Mat(p1);
 								Mat P1_warped = homography * P1;
@@ -319,7 +318,7 @@ Mat FindingHomographyFunc(Mat image,std::vector<int> arrayHor,std::vector<int> a
 	
 								if (abs(ratio1 - ratio2) < 0.4)
 								{
-									int numOfInliers = 0;
+									int num_of_inliers = 0;
 
 									for (std::vector<Point2f>::iterator it = intersection_points_vector.begin(); it != intersection_points_vector.end(); ++it)
 									{
@@ -331,10 +330,10 @@ Mat FindingHomographyFunc(Mat image,std::vector<int> arrayHor,std::vector<int> a
 
 										int a = BelongsToGrid(X_warped, P1_warped, x_distance, tolerance);
 										if (a == 1)
-											numOfInliers++;
+											num_of_inliers++;
 										else if (a == -1)
 										{
-											numOfInliers = 0;
+											num_of_inliers = 0;
 											it = intersection_points_vector.end() - 1;
 										}
 									}

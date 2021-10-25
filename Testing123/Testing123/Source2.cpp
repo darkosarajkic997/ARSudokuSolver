@@ -41,12 +41,7 @@ cv::Mat CalculateHomography(std::vector<Point2f> a, std::vector<Point2f> b)
 	}
 	P.at<float>(8, 8) = 1;
 	Mat P_inv(9, 9, CV_32F, Scalar(0));
-	try {
 		P_inv = P.inv();
-	}
-	catch (const cv::Exception& e) {
-		cerr << e.msg << endl;
-	}
 
 	Mat row_mat(9, 1, CV_32F, Scalar(0));
 	row_mat.at<float>(8, 0) = 1;
@@ -137,12 +132,12 @@ void DrawLines(Mat image, std::vector<int> array1)
 		cv::line(image, t1, t2, Scalar(255), 3, 8, 0);
 	}
 }
-void DrawLines2(Mat image, std::vector<int> array1)
+void DrawLines2(Mat image, std::vector<int> array)
 {
-	for (int i = 0; i < array1.size(); i += 2)
+	for (int i = 0; i < array.size(); i += 2)
 	{
-		float rho = array1[i];
-		float theta = array1[i + 1];
+		float rho = array[i];
+		float theta = array[i + 1];
 		double a = cos(theta * pi / 180);
 		double b = sin(theta * pi / 180);
 		double x0 = a * rho;
