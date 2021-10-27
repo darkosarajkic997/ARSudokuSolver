@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "FindingHomography.h"
+#include "Header2.h"
 
 
 # define pi         3.14159265358979323846
@@ -13,13 +13,7 @@ using namespace std;
 
 cv::Mat CalculateHomography(std::vector<Point2f> a, std::vector<Point2f> b)
 {
-	/*float** homography = new float* [3];
-	for (int i = 0; i < 3; i++)
-		homography[i] = new float[3]();*/
-
-
 	Mat P(9, 9, CV_32F, Scalar(0));
-
 	for (int i = 0; i < 4; i++)
 	{
 		float x1_a = a[i].x;
@@ -77,15 +71,15 @@ void sort(std::vector<int> array)
 				array[j + 1] = t2;
 			}
 }
-std::vector<Point2f> CalculateIntersections(std::vector<int> niz1, std::vector<int> niz2)
+std::vector<Point2f> CalculateIntersections(std::vector<int> array_1, std::vector<int> array_2)
 {
-	sort(niz1);
-	sort(niz2);
+	sort(array_1);
+	sort(array_2);
 	std::vector<Point2f> vec;
-	for (int i = 0; i < niz1.size(); i += 2)
-		for (int j = 0; j < niz2.size(); j += 2)
+	for (int i = 0; i < array_1.size(); i += 2)
+		for (int j = 0; j < array_2.size(); j += 2)
 		{
-			Point2f p = CalculatePoint(niz1[i], niz1[i + 1], niz2[j], niz2[j + 1]);
+			Point2f p = CalculatePoint(array_1[i], array_1[i + 1], array_2[j], array_2[j + 1]);
 			vec.push_back(p);
 		}
 	return vec;
@@ -93,23 +87,6 @@ std::vector<Point2f> CalculateIntersections(std::vector<int> niz1, std::vector<i
 float distance(Point2f p1, Point2f p2)
 {
 	return sqrt(pow((p1.x - p2.x), 2) + pow((p1.y - p2.y), 2));
-}
-int CalculateNumOfInliers(std::vector<Point2f> vec, cv::Mat homography, float tolerance)
-{
-	int numOfInliers = 0;
-	for (std::vector<Point2f>::iterator it = vec.begin(); it != vec.end(); ++it)
-	{
-		Mat X(3, 1, CV_32F);
-		X.at<float>(0, 0) = (*it).x;
-		X.at<float>(1, 0) = (*it).y;
-		X.at<float>(2, 0) = 1;
-		Mat X_warped = homography * X;
-		float x_diff = X_warped.at<float>(0, 0) - round(X_warped.at<float>(0, 0));
-		float y_diff = X_warped.at<float>(1, 0) - round(X_warped.at<float>(1, 0));
-		if ((abs(x_diff) < tolerance) && (abs(y_diff) < tolerance))
-			numOfInliers++;
-	}
-	return numOfInliers;
 }
 void swap(int* x, int* y)
 {

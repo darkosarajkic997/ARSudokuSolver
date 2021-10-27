@@ -3,9 +3,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "FindingHomography.h"
-
-
+#include "Header1.h"
+#include "Header2.h"
+#include "Header3.h"
 
 # define pi         3.14159265358979323846
 
@@ -37,13 +37,10 @@ int main(int argc, char** argv)
 		}
 
 	std::vector<int> outputArrayWithoutFiltering = doPicture(picture, cols, rows);
-	//DrawLines(imageCanny, outputArrayWithoutFiltering);
 	cv::imshow("CannyBeforeFiltering", imageCanny);
 	std::vector<int> outputArrayWithFiltering = Filtering(outputArrayWithoutFiltering, 20, 5);
-	//DrawLines(imageCanny, outputArrayWithFiltering);
 	std::vector<int> arrayVer;
 	std::vector<int> arrayHor;
-	int theta_for_distinction = outputArrayWithFiltering[1];
 	for (std::vector<int>::iterator it = outputArrayWithFiltering.begin(); it != outputArrayWithFiltering.end();)
 	{
 		if ((*(it + 1) > 8) && (*(it + 1) < 13))//(12,25)
@@ -58,19 +55,7 @@ int main(int argc, char** argv)
 		}
 		it += 2;
 	}
-	/*int theta =0;
-	for (int rho = 130; rho < 130 * 11; rho += 130)
-	{
-		arrayVer.push_back(rho);
-		arrayVer.push_back(theta);
-	}
-	theta = 270;
-	for (int rho = 130; rho < 130 * 11; rho += 130)
-	{
-		arrayHor.push_back(rho);
-		arrayHor.push_back(theta);
-	}*/
-	std::vector<int> arrayHorFiltered = Filtering(arrayHor, 20, 5);//Filtering func needs repairing
+	std::vector<int> arrayHorFiltered = Filtering(arrayHor, 20, 5);
 	std::vector<int> arrayVerFiltered = Filtering(arrayVer, 20, 5);
 	DrawLines(imageCanny, arrayHorFiltered);
 	DrawLines(imageCanny, arrayVerFiltered);
@@ -78,12 +63,10 @@ int main(int argc, char** argv)
 	waitKey(0);
 	Mat H(3, 3, CV_32F);
 	H = FindingHomographyFunc(imageCanny, arrayHorFiltered, arrayVerFiltered, 55);
-	//AdjustingHomography(imageCanny,arrayHorFiltered,arrayVerFiltered)
 	Mat_<unsigned __int8> imageSobeled;
 	Mat_<unsigned __int8> imageCannied;
 
-	//imshow("Sobel", imageSobeled);
-	Size sz(1300, 900);//Da li mogu da podesim velicinu slike u funkciji koliko hocu pa posle da je smanjim kad vratim nazad???
+	Size sz(1300, 900);
 	cv::warpPerspective(image, outputImage, H, sz);
 	imshow("Output1", outputImage);
 

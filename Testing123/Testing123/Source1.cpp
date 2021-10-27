@@ -3,13 +3,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "FindingHomography.h"
+#include "Header1.h"
 
 # define pi         3.14159265358979323846
 
 using namespace cv;
 using namespace std; 
- int* rhoThetaMatrixInitilization(int rho, int theta)
+int* rhoThetaMatrixInitilization(int rho, int theta)
 {
 	int* rhoThetaMatrix = new int[rho * theta]();
 	return rhoThetaMatrix;
@@ -65,7 +65,7 @@ int CalculatingMatrixMaximum(int rho, int theta, int* houghSpaceMatrix)
 			}
 	return matrixMaximum;
 }
-std::vector<int> FindingLocalMaximums(int rho, int theta, int* houghSpaceMatrix, int matrixMaximum, float cuttingFactor = 0.5)
+std::vector<int> FindingLocalMaximums(int rho, int theta, int* houghSpaceMatrix, int matrixMaximum, float cuttingFactor)
 {
 	std::vector<int> rhoThetaBeforeClipping;
 	for (int height = 0; height < rho; height++)
@@ -93,7 +93,7 @@ int TakeTheMiddleLineIndex(int i, int numberOfSimilarLines)
 		s = s + 1;
 	return s;
 }
-std::vector<int> Filtering(std::vector<int> rhoThetaBeforeClipping, int rhoDifference = 15, int thetaDifference = 5)
+std::vector<int> Filtering(std::vector<int> rhoThetaBeforeClipping, int rhoDifference, int thetaDifference)
 {
 	int numberOfSimilarLines = 1;
 	std::vector<int> outputArray;
@@ -120,8 +120,8 @@ std::vector<int> Filtering(std::vector<int> rhoThetaBeforeClipping, int rhoDiffe
 std::vector<int> doPicture(unsigned __int8* picture, int width, int height)
 {
 
-	int rho = (sqrt(pow(width, 2) + pow(height, 2))) * 10;
-	int theta = 360 * 10;
+	int rho = sqrt(pow(width, 2) + pow(height, 2));
+	int theta = 360;
 
 	int* houghSpaceMatrix = new int[rho * theta]();
 
