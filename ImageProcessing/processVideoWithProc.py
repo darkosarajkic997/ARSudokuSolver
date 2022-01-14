@@ -83,12 +83,25 @@ def create_background_processes():
     pool = multiprocessing.Pool(processes=NUMBER_OF_PROCESSES, initializer=solving_worker, initargs=(data_queue, result_queue, board_dict, config['Resources']['model']))
     return data_queue, result_queue, board_dict, pool
 
+def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
+    dim = None
+    (h, w) = image.shape[:2]
+
+    if width is None and height is None:
+        return image
+    if width is None:
+        r = height / float(h)
+        dim = (int(w * r), height)
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+    resized = cv2.resize(image, dim, interpolation = inter)
+    return resized
 
 if __name__ == "__main__":
-    vid = cv2.VideoCapture(0)
     config = configparser.ConfigParser()
     config.read('config.ini')
-
+    vid = cv2.VideoCapture("F:\\ML Projects\\CUBIC Praksa\\SudokuSolver\\Data\\Video\\20211011_203347.mp4")
     if (vid.isOpened() == False):
         print("Error opening video")
     else:
@@ -101,9 +114,12 @@ if __name__ == "__main__":
         transformation_matrix_queue = np.zeros((SMOOTH_QUEUE_SIZE, 3, 3))
         matrix_index = 0
         clear_solution_frame_count=0
+        index=0
         while(vid.isOpened()):
             ret, frame = vid.read()
             if(ret == True):
+                index+=1
+                #frame = image_resize(frame, width=800)
                 frame_size = frame.shape[0]*frame.shape[1]
                 image_pre = processImage.preprocess_image(frame)
                 conture, area = processImage.find_board_corners(image_pre)
@@ -160,6 +176,7 @@ if __name__ == "__main__":
                     board_is_solved = False
                     solution_key = None
                     solution = None
+                #cv2.imwrite(f"F:\ML Projects\CUBIC Praksa\SudokuSolver\Data\gif\{index}.jpg",frame)
                 cv2.imshow('frame', frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break

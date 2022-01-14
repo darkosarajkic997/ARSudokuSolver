@@ -189,14 +189,14 @@ def filter_cells_for_classification(cells):
     return filtered_cells,values
 
 
-def draw_solution_mask(shape,matrix,filled_cells,size_up_dim=60, x_correction=0.3, y_correction=0.78):
+def draw_solution_mask(shape,matrix,filled_cells,size_up_dim=40, x_correction=0.3, y_correction=0.78):
     """Create mask with with numbers that are missing from solution on white background
 
     Args:
         shape ((integer,integer)): Shape of mask to be created
         matrix (numpy array): Sudoku board matrix that is solved
         filled_cells ([numpy array]): Array that contains markers for all field that are filled in original image
-        size_up_dim (int, optional): Size of cell in pixel above which font is increased. Defaults to 60.
+        size_up_dim (int, optional): Size of cell in pixel above which font is increased. Defaults to 40.
         x_correction (float, optional): Offset on X axis in cell from which to draw number. Defaults to 0.3.
         y_correction (float, optional): Offset on Y axis in cell from which to draw number. Defaults to 0.78.
 

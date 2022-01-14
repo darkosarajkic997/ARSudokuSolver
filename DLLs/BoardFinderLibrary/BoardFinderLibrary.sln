@@ -8,7 +8,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestDLL", "TestDLL\TestDLL.vcxproj", "{AB9C580C-A6F6-4133-BF7B-E4E646905AFB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A63EF1E4-2931-4A12-B6EC-A7F503E2D08B} = {A63EF1E4-2931-4A12-B6EC-A7F503E2D08B}
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948} = {B71B66F1-C6D9-48C0-A36E-5F6D01E78948}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RANSACHomography", "RANSACHomography\RANSACHomography.vcxproj", "{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +37,14 @@ Global
 		{AB9C580C-A6F6-4133-BF7B-E4E646905AFB}.Release|x64.Build.0 = Release|x64
 		{AB9C580C-A6F6-4133-BF7B-E4E646905AFB}.Release|x86.ActiveCfg = Release|Win32
 		{AB9C580C-A6F6-4133-BF7B-E4E646905AFB}.Release|x86.Build.0 = Release|Win32
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}.Debug|x64.ActiveCfg = Debug|x64
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}.Debug|x64.Build.0 = Debug|x64
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}.Debug|x86.ActiveCfg = Debug|Win32
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}.Debug|x86.Build.0 = Debug|Win32
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}.Release|x64.ActiveCfg = Release|x64
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}.Release|x64.Build.0 = Release|x64
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}.Release|x86.ActiveCfg = Release|Win32
+		{B71B66F1-C6D9-48C0-A36E-5F6D01E78948}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

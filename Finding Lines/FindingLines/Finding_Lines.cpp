@@ -52,7 +52,7 @@ int CalculatingMatrixMaximum(int rho, int theta, int* houghSpaceMatrix)
 			}
 	return matrixMaximum;
 }
-void FindingLocalMaximums(int SIZE,int rho, int theta, int* houghSpaceMatrix,int* rhoThetaBeforeClipping,int matrixMaximum, float cuttingFactor = 0.5)
+void FindingLocalMaximums(int SIZE, int rho, int theta, int* houghSpaceMatrix, int* rhoThetaBeforeClipping, int matrixMaximum, float cuttingFactor = 0.5)
 {
 
 	int arrayIncrement = 0;
@@ -67,11 +67,11 @@ void FindingLocalMaximums(int SIZE,int rho, int theta, int* houghSpaceMatrix,int
 			}
 		}
 }
-void AddALineToOutputArray(int* outputArray, int* arrayIncrement, int* rhoThetaBeforeClipping,int index)
+void AddALineToOutputArray(int* outputArray, int* arrayIncrement, int* rhoThetaBeforeClipping, int index)
 {
 
 	outputArray[*arrayIncrement] = rhoThetaBeforeClipping[index];
-	outputArray[*(arrayIncrement) + 1] = rhoThetaBeforeClipping[index + 1];
+	outputArray[*(arrayIncrement)+1] = rhoThetaBeforeClipping[index + 1];
 	*arrayIncrement += 2;
 }
 int TakeTheMiddleLineIndex(int i, int numberOfSimilarLines)
@@ -81,7 +81,7 @@ int TakeTheMiddleLineIndex(int i, int numberOfSimilarLines)
 		s = s + 1;
 	return s;
 }
-int* Filtering(int* rhoThetaBeforeClipping,int SIZE=1000,int rhoDifference=10)
+int* Filtering(int* rhoThetaBeforeClipping, int SIZE = 1000, int rhoDifference = 10)
 {
 	int* outputArray = new int[SIZE]();
 	int numberOfSimilarLines = 0;
@@ -104,22 +104,22 @@ int* Filtering(int* rhoThetaBeforeClipping,int SIZE=1000,int rhoDifference=10)
 int* doPicture(unsigned __int8* picture, int width, int height)
 {
 
-	int rho = sqrt(pow(width,2)+pow(height,2));
+	int rho = sqrt(pow(width, 2) + pow(height, 2));
 	int theta = 360;
 
 	int* houghSpaceMatrix = new int[rho * theta]();
 
 	CalculatingRhoThetaMatrix(picture, width, height, rho, theta, houghSpaceMatrix);
 
-	int matrixMaximum=CalculatingMatrixMaximum(rho, theta, houghSpaceMatrix);
+	int matrixMaximum = CalculatingMatrixMaximum(rho, theta, houghSpaceMatrix);
 
 	int SIZE = 1000;
 	int* rhoThetaBeforeClipping = new int[SIZE]();
 
-	FindingLocalMaximums(SIZE,rho, theta, houghSpaceMatrix,rhoThetaBeforeClipping,matrixMaximum);
+	FindingLocalMaximums(SIZE, rho, theta, houghSpaceMatrix, rhoThetaBeforeClipping, matrixMaximum);
 
 	delete[] houghSpaceMatrix;
-	
+
 	return rhoThetaBeforeClipping;
 }
 
@@ -136,14 +136,14 @@ int main(int argc, char** argv)
 	unsigned __int8* picture;
 	picture = (unsigned __int8*)malloc(rows * cols * sizeof(unsigned __int8));
 
-	for (int i=0;i<rows;i++)
+	for (int i = 0; i < rows; i++)
 		for (int j = 0; j < cols; j++)
 		{
-			picture[cols*i+j] = imageCanny[i][j];
+			picture[cols * i + j] = imageCanny[i][j];
 		}
 
-	int* outputArrayWithoutFiltering=doPicture(picture, cols, rows);
-	int* outputArrayWithFiltering= Filtering(outputArrayWithoutFiltering);
+	int* outputArrayWithoutFiltering = doPicture(picture, cols, rows);
+	int* outputArrayWithFiltering = Filtering(outputArrayWithoutFiltering);
 
 	for (int i = 0; i < 1000; i += 2)
 	{
